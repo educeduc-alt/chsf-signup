@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>研習活動報名</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600&family=Noto+Sans+TC:wght@300;400;500&display=swap');
+:root{
+  --navy:#1c2b4a;--navy2:#2d4070;
+  --blue:#2563a8;--blue-lt:#e8f0fb;--blue-mid:#c8d9f5;
+  --gold:#b8922a;--gold-lt:#fdf6e7;
+  --green:#1d7a50;--green-lt:#e6f4ed;
+  --red:#c0392b;--red-lt:#fcecea;
+  --ink:#1a1a2e;--ink2:#4a4a6a;--ink3:#8888aa;
+  --line:#e2e4ed;--line2:#f0f2f8;
+  --bg:#f4f5f9;--white:#fff;
+  --r:12px;
+  --sh:0 1px 4px rgba(28,43,74,.07),0 4px 16px rgba(28,43,74,.06);
+  --sh2:0 8px 32px rgba(28,43,74,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:14px;line-height:1.6}
+
+/* ── OVERLAY / MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(20,30,56,.88);z-index:9000;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.on{display:flex}
+.modal{background:var(--white);border-radius:16px;width:100%;max-width:480px;padding:32px 36px;box-shadow:var(--sh2);animation:popIn .2s ease;max-height:90vh;overflow-y:auto}
+@keyframes popIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.modal-title{font-family:'Noto Serif TC',serif;font-size:18px;font-weight:600;margin-bottom:5px;color:var(--navy)}
+.modal-sub{font-size:13px;color:var(--ink3);margin-bottom:22px}
+.merr{font-size:12px;color:var(--red);margin-bottom:10px;display:none;text-align:center}
+
+/* ── PUBLIC HEADER ── */
+.pub-hdr{background:var(--navy);padding:0 32px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 0 rgba(255,255,255,.06)}
+.pub-brand{font-family:'Noto Serif TC',serif;font-size:15px;color:#fff;font-weight:600;letter-spacing:.05em}
+.pub-admin-btn{padding:5px 14px;font-size:12px;color:rgba(255,255,255,.45);background:none;border:1px solid rgba(255,255,255,.15);border-radius:7px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .15s}
+.pub-admin-btn:hover{color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.35)}
+
+/* ── PUBLIC PAGE ── */
+.pub-inner{max-width:820px;margin:0 auto;padding:36px 24px 72px}
+.pub-hero{text-align:center;margin-bottom:36px}
+.pub-hero h2{font-family:'Noto Serif TC',serif;font-size:26px;font-weight:600;color:var(--navy);margin-bottom:8px}
+.pub-hero p{font-size:14px;color:var(--ink3)}
+.act-list{display:flex;flex-direction:column;gap:20px}
+.act-pub-card{background:var(--white);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+.apc-top{background:linear-gradient(135deg,var(--navy),var(--navy2));padding:20px 24px}
+.apc-title{font-family:'Noto Serif TC',serif;font-size:17px;font-weight:500;color:#fff;margin-bottom:5px}
+.apc-meta{font-size:12px;color:rgba(255,255,255,.5);line-height:1.7}
+.apc-pts{margin-top:12px;display:flex;flex-direction:column;gap:5px}
+.apc-pt{font-size:12px;color:rgba(255,255,255,.78);display:flex;gap:8px;line-height:1.5}
+.apc-pt::before{content:'·';flex-shrink:0}
+.apc-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.apc-tag{font-size:11px;font-weight:500;padding:2px 9px;border-radius:99px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15)}
+.apc-body{padding:20px 24px}
+.apc-sess-label{font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:10px}
+.sess-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:8px}
+.sess-btn{padding:12px 14px;border:1.5px solid var(--line);border-radius:9px;background:var(--white);cursor:pointer;text-align:left;font-family:'Noto Sans TC',sans-serif;transition:all .16s;position:relative}
+.sess-btn:hover{border-color:var(--blue-mid);background:var(--blue-lt);transform:translateY(-1px);box-shadow:0 2px 8px rgba(37,99,168,.1)}
+.sess-btn .sd{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px}
+.sess-btn .st{font-size:11px;color:var(--ink3)}
+.sess-btn .sa{font-size:11px;color:var(--blue);margin-top:5px;font-weight:500}
+.pub-empty{text-align:center;padding:60px 20px;color:var(--ink3)}
+.pub-empty svg{width:52px;height:52px;stroke:var(--line);margin:0 auto 14px;display:block}
+.pub-empty h3{font-size:16px;font-weight:500;margin-bottom:6px;color:var(--ink2)}
+.pub-empty p{font-size:13px}
+
+/* ── REG MODAL ── */
+.reg-info-box{background:var(--blue-lt);border:1px solid var(--blue-mid);border-radius:8px;padding:10px 14px;margin-bottom:16px}
+.reg-info-act{font-size:13px;font-weight:500;color:var(--blue)}
+.reg-info-sess{font-size:12px;color:var(--ink3);margin-top:2px}
+.success-screen{text-align:center;padding:8px 0 4px}
+.success-icon{width:56px;height:56px;border-radius:50%;background:var(--green-lt);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.success-icon svg{width:28px;height:28px;stroke:var(--green)}
+.success-screen h3{font-family:'Noto Serif TC',serif;font-size:18px;font-weight:500;margin-bottom:8px;color:var(--navy)}
+.success-screen p{font-size:13px;color:var(--ink3);line-height:1.7;margin-bottom:20px}
+
+/* ── ADMIN ── */
+.adm-overlay{position:fixed;inset:0;background:var(--bg);z-index:500;display:none;flex-direction:column}
+.adm-overlay.on{display:flex}
+.adm-hdr{background:var(--navy);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;flex-shrink:0}
+.adm-hdr-title{font-family:'Noto Serif TC',serif;font-size:15px;color:#fff;font-weight:500}
+.adm-close{padding:5px 14px;font-size:12px;color:rgba(255,255,255,.55);background:none;border:1px solid rgba(255,255,255,.18);border-radius:7px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .15s}
+.adm-close:hover{color:#fff;border-color:rgba(255,255,255,.45)}
+.adm-tabs{background:var(--white);border-bottom:1px solid var(--line);display:flex;padding:0 28px;flex-shrink:0}
+.adm-tab{padding:13px 20px;font-size:13px;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .14s;background:none;border-top:none;border-left:none;border-right:none;font-family:'Noto Sans TC',sans-serif}
+.adm-tab.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:500}
+.adm-body{flex:1;overflow-y:auto;padding:28px 32px}
+.adm-inner{max-width:900px;margin:0 auto}
+.acard{background:var(--white);border:1px solid var(--line);border-radius:var(--r);padding:20px 24px;margin-bottom:16px;box-shadow:var(--sh)}
+.acard-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.acard-title{font-size:14px;font-weight:500;color:var(--ink)}
+
+/* ── FORM INPUTS ── */
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
+.fg label{font-size:12px;font-weight:500;color:var(--ink2)}
+.req{color:var(--red)}
+.fg input,.fg textarea,.fg select{padding:9px 12px;font-size:13px;border:1.5px solid var(--line);border-radius:9px;background:var(--white);color:var(--ink);font-family:'Noto Sans TC',sans-serif;transition:all .15s;width:100%}
+.fg input:focus,.fg textarea:focus,.fg select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,168,.1)}
+.fg textarea{resize:vertical;line-height:1.6}
+.form-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+.form-4 .fg{margin-bottom:0}
+.form-2 .fg{margin-bottom:0}
+
+/* ── DATE ROWS (admin add activity) ── */
+.date-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.date-row{display:flex;gap:8px;align-items:center;background:var(--line2);border-radius:8px;padding:8px 10px}
+.date-row input{flex:1;padding:7px 10px;font-size:13px;border:1px solid var(--line);border-radius:7px;background:var(--white);color:var(--ink);font-family:'Noto Sans TC',sans-serif}
+.date-row input:focus{outline:none;border-color:var(--blue)}
+.date-row .del-btn{background:none;border:none;cursor:pointer;color:var(--ink3);padding:3px;border-radius:5px;flex-shrink:0}
+.date-row .del-btn:hover{color:var(--red);background:var(--red-lt)}
+.date-row .del-btn svg{width:14px;height:14px;display:block}
+
+/* ── ADMIN ACT LIST ── */
+.adm-act{background:var(--white);border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px;box-shadow:var(--sh);overflow:hidden}
+.adm-act-hd{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.adm-act-title{font-size:14px;font-weight:500;color:var(--ink)}
+.adm-act-meta{font-size:12px;color:var(--ink3);margin-top:2px}
+.adm-act-body{display:none;border-top:1px solid var(--line2);padding:14px 18px;background:#fbfcff}
+.adm-act-body.on{display:block}
+.sess-stat-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;background:var(--line2);margin-bottom:6px}
+.sess-stat-row:last-child{margin-bottom:0}
+.ssr-d{font-size:13px;font-weight:500;color:var(--ink)}
+.ssr-t{font-size:11px;color:var(--ink3)}
+.ssr-cnt{font-size:13px;color:var(--blue);font-weight:500}
+
+/* ── STATS ── */
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.stat-box{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:14px 18px;box-shadow:var(--sh)}
+.stat-box .sv{font-size:28px;font-weight:500;font-family:'Noto Serif TC',serif;color:var(--blue)}
+.stat-box .sl{font-size:11px;color:var(--ink3);margin-top:2px}
+
+/* ── REG TABLE ── */
+.reg-tabs{display:flex;gap:0;border-bottom:2px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.reg-tab{padding:8px 16px;font-size:13px;color:var(--ink3);background:none;border:none;cursor:pointer;font-family:'Noto Sans TC',sans-serif;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .14s;display:flex;align-items:center;gap:6px}
+.reg-tab:hover{color:var(--ink)}.reg-tab.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:500}
+.reg-tab .rc{background:var(--blue-lt);color:var(--blue);font-size:11px;font-weight:500;padding:1px 6px;border-radius:99px}
+.reg-tab.on .rc{background:var(--blue);color:#fff}
+.rtable{width:100%;border-collapse:collapse;font-size:13px}
+.rtable th{padding:8px 10px;text-align:left;font-size:11px;font-weight:500;color:var(--ink3);border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.04em}
+.rtable td{padding:10px 10px;border-bottom:1px solid var(--line2);vertical-align:middle}
+.rtable tr:last-child td{border-bottom:none}.rtable tr:hover td{background:var(--line2)}
+.av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0}
+
+/* ── DOC ── */
+.doc-out{background:var(--white);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-top:16px;display:none}
+.doc-hdr{background:var(--navy);padding:13px 20px;display:flex;align-items:center;justify-content:space-between}
+.doc-hdr-t{font-family:'Noto Serif TC',serif;font-size:14px;color:#fff;font-weight:500}
+.doc-badge{font-size:11px;background:rgba(255,255,255,.14);color:rgba(255,255,255,.8);padding:2px 9px;border-radius:99px;border:1px solid rgba(255,255,255,.18)}
+.doc-body{padding:24px 28px;font-size:13px;line-height:2.1;white-space:pre-wrap;font-family:'Noto Serif TC',serif;color:var(--ink);background:#fffef9;border-bottom:1px solid var(--line2)}
+.doc-actions{padding:12px 20px;display:flex;gap:8px;justify-content:flex-end}
+
+/* ── BUTTONS ── */
+.btn{padding:8px 18px;font-size:13px;border-radius:8px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;font-weight:500;transition:all .14s;border:1px solid transparent}
+.btn-p{background:linear-gradient(135deg,var(--blue),var(--navy2));color:#fff}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(37,99,168,.28)}
+.btn-g{background:var(--white);color:var(--ink2);border-color:var(--line)}
+.btn-g:hover{background:var(--line2)}
+.btn-full{width:100%;padding:12px;font-size:14px;border-radius:10px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;font-weight:500;transition:all .16s;border:none;background:linear-gradient(135deg,var(--blue),var(--navy2));color:#fff;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-full:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(37,99,168,.3)}
+.btn-full svg{width:15px;height:15px}
+.btn-danger{background:var(--white);color:var(--red);border-color:#f0b8b8}
+.btn-danger:hover{background:var(--red-lt)}
+.bdg{display:inline-block;font-size:11px;font-weight:500;padding:2px 9px;border-radius:99px}
+.bdg-blue{background:var(--blue-lt);color:var(--blue)}
+
+/* ── SPIN ── */
+.spin{width:16px;height:16px;border:2px solid #d0c8f8;border-top-color:var(--purple,#6d3fc5);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--navy);color:#fff;padding:11px 22px;border-radius:99px;font-size:13px;font-weight:500;opacity:0;transition:all .22s;pointer-events:none;z-index:9999;white-space:nowrap}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.note-box{background:var(--gold-lt);border:1px solid #f0d5a0;border-radius:8px;padding:9px 13px;font-size:12px;color:var(--gold);margin-bottom:14px;line-height:1.6}
+.add-date-btn{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--blue);background:none;border:1px dashed var(--blue-mid);border-radius:7px;padding:6px 14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .14s;margin-top:4px}
+.add-date-btn:hover{background:var(--blue-lt)}
+</style>
+</head>
+<body>
+
+<!-- ══ PUBLIC SITE ══ -->
+<header class="pub-hdr">
+  <div class="pub-brand">研習活動報名</div>
+  <button class="pub-admin-btn" onclick="openLoginModal()">管理員登入</button>
+</header>
+
+<div class="pub-inner">
+  <div class="pub-hero">
+    <h2>歡迎報名研習活動</h2>
+    <p>請選擇以下研習活動的場次，填寫姓名完成報名</p>
+  </div>
+  <div id="pub-empty" class="pub-empty">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <h3>目前尚無開放報名的活動</h3>
+    <p>請稍後再來，或洽詢辦公室同仁</p>
+  </div>
+  <div class="act-list" id="pub-act-list" style="display:none"></div>
+</div>
+
+<!-- ══ OVERLAYS ══ -->
+
+<!-- 設定 -->
+<div class="overlay" id="setup-overlay">
+  <div class="modal">
+    <div class="modal-title">首次設定</div>
+    <div class="modal-sub">設定 Supabase 雲端資料庫與後台管理密碼</div>
+    <div class="fg"><label>Supabase Project URL</label><input id="cfg-url" placeholder="https://xxxxxxxx.supabase.co"/></div>
+    <div class="fg"><label>Supabase anon key</label><input id="cfg-key" placeholder="eyJhbGciOi..."/></div>
+    <div class="fg"><label>後台管理密碼（自訂）</label><input type="password" id="cfg-pass" placeholder="設定一組只有您知道的密碼"/></div>
+    <div class="merr" id="cfg-err">請填寫所有欄位</div>
+    <button class="btn-full" onclick="saveSetup()">儲存並開始使用</button>
+    <div style="font-size:12px;color:var(--ink3);text-align:center;margin-top:14px;line-height:1.7">
+      Supabase 免費方案即可使用<br>
+      前往 <a href="https://supabase.com" target="_blank" style="color:var(--blue)">supabase.com</a> 建立帳號與專案
+    </div>
+  </div>
+</div>
+
+<!-- 管理員登入 -->
+<div class="overlay" id="login-overlay">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-title">管理員登入</div>
+    <div class="modal-sub">輸入管理密碼進入後台</div>
+    <div class="fg"><label>管理密碼</label><input type="password" id="login-pass" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <div class="merr" id="login-err">密碼不正確</div>
+    <button class="btn-full" onclick="doLogin()">進入後台</button>
+    <div style="text-align:center;margin-top:12px">
+      <button class="btn btn-g" onclick="closeOverlay('login-overlay')" style="font-size:12px">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- 報名 -->
+<div class="overlay" id="reg-overlay">
+  <div class="modal" style="max-width:400px">
+    <div id="reg-form-view">
+      <div class="modal-title">填寫報名資料</div>
+      <div class="reg-info-box">
+        <div class="reg-info-act" id="reg-act-name"></div>
+        <div class="reg-info-sess" id="reg-sess-info"></div>
+      </div>
+      <div class="fg">
+        <label>您的姓名 <span class="req">*</span></label>
+        <input id="reg-name" placeholder="請輸入姓名" onkeydown="if(event.key==='Enter')submitReg()"/>
+      </div>
+      <div id="reg-saving" style="display:none;align-items:center;gap:8px;font-size:13px;color:#6d3fc5;margin-bottom:12px">
+        <div class="spin"></div>送出中，請稍候…
+      </div>
+      <button class="btn-full" onclick="submitReg()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        確認報名
+      </button>
+      <div style="text-align:center;margin-top:12px">
+        <button class="btn btn-g" onclick="closeOverlay('reg-overlay')" style="font-size:12px">取消</button>
+      </div>
+    </div>
+    <div id="reg-success-view" style="display:none">
+      <div class="success-screen">
+        <div class="success-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3>報名成功！</h3>
+        <p id="success-msg"></p>
+        <button class="btn btn-g" onclick="closeOverlay('reg-overlay')">關閉</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN ══ -->
+<div class="adm-overlay" id="adm-overlay">
+  <div class="adm-hdr">
+    <div class="adm-hdr-title">研習活動 — 管理後台</div>
+    <button class="adm-close" onclick="closeAdmin()">← 返回報名頁面</button>
+  </div>
+  <div class="adm-tabs">
+    <button class="adm-tab on" id="at-acts" onclick="admTab('acts')">新增活動</button>
+    <button class="adm-tab" id="at-regs" onclick="admTab('regs')">報名名單</button>
+    <button class="adm-tab" id="at-doc" onclick="admTab('doc')">產生回文公文</button>
+  </div>
+  <div class="adm-body">
+  <div class="adm-inner">
+
+    <!-- 新增活動 -->
+    <div id="adm-acts">
+      <div class="acard">
+        <div class="acard-hd">
+          <div class="acard-title">新增研習活動</div>
+        </div>
+        <div class="note-box">參考 PDF 公文內容，手動填寫以下資料，填完後按「新增活動」即發布到報名頁面。</div>
+        <div class="form-2">
+          <div class="fg"><label>活動名稱 <span class="req">*</span></label><input id="act-name" placeholder="例：113年度特殊教育研習"/></div>
+          <div class="fg"><label>主辦機關 <span class="req">*</span></label><input id="act-org" placeholder="例：國立臺南大學特殊教育中心"/></div>
+        </div>
+        <div class="form-2">
+          <div class="fg"><label>公文字號</label><input id="act-ref" placeholder="例：南大特教字第1130001234號"/></div>
+          <div class="fg"><label>截止報名日期</label><input id="act-deadline" placeholder="例：113/05/20"/></div>
+        </div>
+        <div class="form-2">
+          <div class="fg"><label>活動地點</label><input id="act-place" placeholder="例：臺南市政府大樓 B1"/></div>
+          <div class="fg"><label>研習時數</label><input id="act-hours" placeholder="例：3小時"/></div>
+        </div>
+        <div class="fg">
+          <label>活動重點摘要（每行一項，最多 4 項）</label>
+          <textarea id="act-pts" rows="4" placeholder="例：&#10;本研習針對特教教師，強化個別化教育計畫撰寫技能。&#10;全程參與者核發 3 小時研習時數。&#10;請攜帶識別證，現場提供午餐。&#10;報名截止後，主辦單位將電話通知錄取結果。"></textarea>
+        </div>
+        <div class="fg">
+          <label>標籤（用逗號分隔）</label>
+          <input id="act-tags" placeholder="例：研習時數3hr, 午餐提供, 特教教師"/>
+        </div>
+
+        <div class="fg">
+          <label>開放場次 <span class="req">*</span>（每行一筆）</label>
+          <div class="date-rows" id="date-rows">
+            <div class="date-row">
+              <input class="dr-d" placeholder="日期 例：113/05/14（二）" style="flex:1.5"/>
+              <input class="dr-t" placeholder="時段 例：09:00–12:00" style="flex:1"/>
+              <button class="del-btn" onclick="removeDateRow(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
+          </div>
+          <button class="add-date-btn" onclick="addDateRow()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            新增場次
+          </button>
+        </div>
+
+        <div style="text-align:right;margin-top:4px">
+          <button class="btn btn-p" onclick="addActivity()">發布活動到報名頁面</button>
+        </div>
+      </div>
+
+      <div class="acard">
+        <div class="acard-hd">
+          <div class="acard-title">已發布的活動</div>
+          <button class="btn btn-danger" style="font-size:12px;padding:4px 10px" onclick="clearAllActs()">清除全部</button>
+        </div>
+        <div id="adm-act-list">
+          <div style="text-align:center;padding:24px;color:var(--ink3);font-size:13px">尚無活動</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 報名名單 -->
+    <div id="adm-regs" style="display:none">
+      <div class="stat-row">
+        <div class="stat-box"><div class="sv" id="st-total">0</div><div class="sl">總報名人數</div></div>
+        <div class="stat-box"><div class="sv" id="st-acts">0</div><div class="sl">活動數量</div></div>
+        <div class="stat-box"><div class="sv" id="st-sess">0</div><div class="sl">場次數量</div></div>
+      </div>
+      <div class="acard">
+        <div class="acard-hd">
+          <div class="acard-title">報名名單</div>
+          <button class="btn btn-g" style="font-size:12px;padding:5px 12px;display:flex;align-items:center;gap:5px" onclick="refreshRegs()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            重新整理
+          </button>
+        </div>
+        <div class="reg-tabs" id="reg-tabs"></div>
+        <div id="reg-table-wrap">
+          <div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">尚無報名資料</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 回文公文 -->
+    <div id="adm-doc" style="display:none">
+      <div class="acard">
+        <div class="acard-hd"><div class="acard-title">產生回文公文</div></div>
+        <div class="fg"><label>選擇活動</label>
+          <select id="doc-act" onchange="updateDocSess()" style="padding:9px 12px;font-size:13px;border:1.5px solid var(--line);border-radius:9px;background:var(--white);color:var(--ink);font-family:'Noto Sans TC',sans-serif;width:100%">
+            <option value="">請選擇活動</option>
+          </select>
+        </div>
+        <div class="fg"><label>場次篩選</label>
+          <select id="doc-sess" style="padding:9px 12px;font-size:13px;border:1.5px solid var(--line);border-radius:9px;background:var(--white);color:var(--ink);font-family:'Noto Sans TC',sans-serif;width:100%">
+            <option value="">全部場次</option>
+          </select>
+        </div>
+        <div class="form-4" style="margin-top:4px">
+          <div class="fg"><label>發文機關全銜 <span class="req">*</span></label><input id="doc-org" placeholder="臺中市就業服務處"/></div>
+          <div class="fg"><label>承辦人姓名</label><input id="doc-person" placeholder="王小明"/></div>
+          <div class="fg"><label>承辦人職稱</label><input id="doc-jobtitle" placeholder="業務承辦人"/></div>
+          <div class="fg"><label>聯絡電話</label><input id="doc-tel" placeholder="04-XXXXXXXX"/></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+          <button class="btn btn-g" onclick="genDoc('cur')">產生此場次公文</button>
+          <button class="btn btn-p" onclick="genDoc('all')">產生全部場次統整公文</button>
+        </div>
+        <div class="doc-out" id="doc-out">
+          <div class="doc-hdr">
+            <div class="doc-hdr-t" id="doc-out-title">回文公文草稿</div>
+            <div class="doc-badge" id="doc-out-badge">共 0 名</div>
+          </div>
+          <div class="doc-body" id="doc-out-body"></div>
+          <div class="doc-actions">
+            <button class="btn btn-g" onclick="cpDoc()">複製全文</button>
+            <button class="btn btn-p" onclick="cpDoc(true)">複製 → 貼入公文系統</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   CONFIG & STATE
+══════════════════════════════════════════ */
+let CFG = { url:'', key:'', pass:'' };
+let acts = [], regs = [];
+let activeRegTab = '__all__';
+let selActId = null, selDate = null, selTime = null;
+
+function loadCfg(){ ['url','key','pass'].forEach(k => CFG[k] = localStorage.getItem('ws6_'+k)||''); }
+function saveCfg(){ ['url','key','pass'].forEach(k => localStorage.setItem('ws6_'+k, CFG[k])); }
+
+/* ══════════════════════════════════════════
+   SUPABASE
+══════════════════════════════════════════ */
+function sbH(){ return {'Content-Type':'application/json','apikey':CFG.key,'Authorization':'Bearer '+CFG.key}; }
+async function sbGet(t,q=''){ const r=await fetch(`${CFG.url}/rest/v1/${t}?${q}&order=created_at.asc`,{headers:sbH()}); if(!r.ok) throw new Error(await r.text()); return r.json(); }
+async function sbPost(t,d,pref='resolution=merge-duplicates'){ const r=await fetch(`${CFG.url}/rest/v1/${t}`,{method:'POST',headers:{...sbH(),'Prefer':pref},body:JSON.stringify(d)}); if(!r.ok) throw new Error(await r.text()); }
+async function sbDel(t,q){ const r=await fetch(`${CFG.url}/rest/v1/${t}?${q}`,{method:'DELETE',headers:sbH()}); if(!r.ok) throw new Error(await r.text()); }
+
+/* ══════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════ */
+async function boot(){
+  loadCfg();
+  if(!CFG.url||!CFG.key||!CFG.pass){
+    document.getElementById('setup-overlay').classList.add('on'); return;
+  }
+  await loadData();
+  renderPublic();
+}
+
+async function loadData(){
+  try{
+    const aRows = await sbGet('acts');
+    acts = aRows.map(r => r.data);
+    regs = await sbGet('regs');
+  }catch(e){ console.warn('loadData:', e); }
+}
+
+/* ══════════════════════════════════════════
+   SETUP
+══════════════════════════════════════════ */
+function saveSetup(){
+  CFG.url  = document.getElementById('cfg-url').value.trim();
+  CFG.key  = document.getElementById('cfg-key').value.trim();
+  CFG.pass = document.getElementById('cfg-pass').value.trim();
+  if(!CFG.url||!CFG.key||!CFG.pass){ document.getElementById('cfg-err').style.display='block'; return; }
+  saveCfg();
+  closeOverlay('setup-overlay');
+  boot();
+}
+
+/* ══════════════════════════════════════════
+   PUBLIC RENDER
+══════════════════════════════════════════ */
+function renderPublic(){
+  const empty = document.getElementById('pub-empty');
+  const list  = document.getElementById('pub-act-list');
+  if(!acts.length){ empty.style.display='block'; list.style.display='none'; return; }
+  empty.style.display='none'; list.style.display='flex';
+  list.innerHTML = acts.map(a => {
+    const metaParts = [a.org, a.ref, a.deadline?'截止 '+a.deadline:'', a.place, a.hours?'研習時數：'+a.hours:''].filter(Boolean);
+    const ptsHtml = a.pts&&a.pts.length ? `<div class="apc-pts">${a.pts.map(p=>`<div class="apc-pt">${p}</div>`).join('')}</div>` : '';
+    const tagsHtml = a.tags&&a.tags.length ? `<div class="apc-tags">${a.tags.map(t=>`<span class="apc-tag">${t}</span>`).join('')}</div>` : '';
+    const sessHtml = a.dates.map(dt =>
+      `<button class="sess-btn" onclick="openReg('${esc(a.id)}','${esc(a.title)}','${esc(dt.d)}','${esc(dt.t)}')">
+        <div class="sd">${dt.d}</div>
+        <div class="st">${dt.t}</div>
+        <div class="sa">點此報名 →</div>
+      </button>`).join('');
+    return `<div class="act-pub-card">
+      <div class="apc-top">
+        <div class="apc-title">${a.title}</div>
+        <div class="apc-meta">${metaParts.join('  ·  ')}</div>
+        ${ptsHtml}${tagsHtml}
+      </div>
+      <div class="apc-body">
+        <div class="apc-sess-label">選擇場次報名</div>
+        <div class="sess-grid">${sessHtml}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════
+   REG MODAL
+══════════════════════════════════════════ */
+function esc(s){ return String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+function openReg(actId, actTitle, d, t){
+  selActId=actId; selDate=d; selTime=t;
+  document.getElementById('reg-act-name').textContent = actTitle;
+  document.getElementById('reg-sess-info').textContent = d+'　'+t;
+  document.getElementById('reg-name').value = '';
+  document.getElementById('reg-form-view').style.display = 'block';
+  document.getElementById('reg-success-view').style.display = 'none';
+  document.getElementById('reg-saving').style.display = 'none';
+  document.getElementById('reg-overlay').classList.add('on');
+  setTimeout(()=>document.getElementById('reg-name').focus(), 100);
+}
+
+async function submitReg(){
+  const name = document.getElementById('reg-name').value.trim();
+  if(!name){ toast('請填寫姓名'); return; }
+  const act = acts.find(a=>a.id===selActId)||{};
+  const now = new Date();
+  const ts = `${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const sessKey = selActId+'||'+selDate+'||'+selTime;
+  const reg = { id:Date.now(), act_id:selActId, sess_key:sessKey, name, reg_time:ts };
+  document.getElementById('reg-saving').style.display='flex';
+  try{
+    await sbPost('regs', reg);
+    regs.push(reg);
+    document.getElementById('reg-saving').style.display='none';
+    document.getElementById('reg-form-view').style.display='none';
+    document.getElementById('success-msg').textContent = `${name}，您已成功報名「${act.title||''}」${selDate} ${selTime} 場次。`;
+    document.getElementById('reg-success-view').style.display='block';
+  }catch(e){
+    document.getElementById('reg-saving').style.display='none';
+    toast('❌ 報名失敗，請重試');
+  }
+}
+
+/* ══════════════════════════════════════════
+   ADMIN
+══════════════════════════════════════════ */
+function openLoginModal(){
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-err').style.display='none';
+  document.getElementById('login-overlay').classList.add('on');
+  setTimeout(()=>document.getElementById('login-pass').focus(), 100);
+}
+function doLogin(){
+  if(document.getElementById('login-pass').value===CFG.pass){
+    closeOverlay('login-overlay');
+    document.getElementById('adm-overlay').classList.add('on');
+    renderAdmActs(); refreshRegs(); populateDocSelects();
+  } else {
+    document.getElementById('login-err').style.display='block';
+  }
+}
+function closeAdmin(){ document.getElementById('adm-overlay').classList.remove('on'); renderPublic(); }
+function admTab(t){
+  ['acts','regs','doc'].forEach(id=>{
+    document.getElementById('adm-'+id).style.display = id===t?'block':'none';
+    document.getElementById('at-'+id).classList.toggle('on', id===t);
+  });
+  if(t==='regs') refreshRegs();
+  if(t==='doc') populateDocSelects();
+}
+
+/* ══════════════════════════════════════════
+   ADD ACTIVITY
+══════════════════════════════════════════ */
+function addDateRow(){
+  const rows = document.getElementById('date-rows');
+  const div = document.createElement('div');
+  div.className='date-row';
+  div.innerHTML=`<input class="dr-d" placeholder="日期 例：113/05/14（二）" style="flex:1.5"/><input class="dr-t" placeholder="時段 例：09:00–12:00" style="flex:1"/><button class="del-btn" onclick="removeDateRow(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+  rows.appendChild(div);
+}
+function removeDateRow(btn){
+  const rows = document.getElementById('date-rows');
+  if(rows.children.length>1) btn.closest('.date-row').remove();
+}
+
+async function addActivity(){
+  const name = document.getElementById('act-name').value.trim();
+  const org  = document.getElementById('act-org').value.trim();
+  if(!name||!org){ toast('請填寫活動名稱與主辦機關'); return; }
+
+  const dateRows = document.querySelectorAll('.date-row');
+  const dates = [];
+  for(const row of dateRows){
+    const d = row.querySelector('.dr-d').value.trim();
+    const t = row.querySelector('.dr-t').value.trim();
+    if(d&&t) dates.push({d,t});
+  }
+  if(!dates.length){ toast('請至少填寫一個場次'); return; }
+
+  const ptsRaw = document.getElementById('act-pts').value.trim();
+  const pts = ptsRaw ? ptsRaw.split('\n').map(s=>s.trim()).filter(Boolean).slice(0,4) : [];
+  const tagsRaw = document.getElementById('act-tags').value.trim();
+  const tags = tagsRaw ? tagsRaw.split(',').map(s=>s.trim()).filter(Boolean) : [];
+
+  const id = 'act_'+Date.now();
+  const data = {
+    id, title:name, org,
+    ref:   document.getElementById('act-ref').value.trim(),
+    deadline: document.getElementById('act-deadline').value.trim(),
+    place: document.getElementById('act-place').value.trim(),
+    hours: document.getElementById('act-hours').value.trim(),
+    pts, tags, dates
+  };
+
+  try{
+    await sbPost('acts', {id, data});
+    acts.push(data);
+    // Clear form
+    ['act-name','act-org','act-ref','act-deadline','act-place','act-hours','act-pts','act-tags'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('date-rows').innerHTML=`<div class="date-row"><input class="dr-d" placeholder="日期 例：113/05/14（二）" style="flex:1.5"/><input class="dr-t" placeholder="時段 例：09:00–12:00" style="flex:1"/><button class="del-btn" onclick="removeDateRow(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`;
+    renderAdmActs(); renderPublic(); populateDocSelects();
+    toast('✓ 活動已發布！');
+  }catch(e){ toast('發布失敗：'+e.message); }
+}
+
+function renderAdmActs(){
+  const el = document.getElementById('adm-act-list');
+  if(!acts.length){ el.innerHTML='<div style="text-align:center;padding:24px;color:var(--ink3);font-size:13px">尚無活動</div>'; return; }
+  el.innerHTML = acts.map(a => {
+    const total = a.dates.reduce((s,dt)=>s+regs.filter(r=>r.sess_key===a.id+'||'+dt.d+'||'+dt.t).length, 0);
+    const sessRows = a.dates.map(dt=>{
+      const cnt = regs.filter(r=>r.sess_key===a.id+'||'+dt.d+'||'+dt.t).length;
+      return `<div class="sess-stat-row"><div><div class="ssr-d">${dt.d}</div><div class="ssr-t">${dt.t}</div></div><div class="ssr-cnt">${cnt} 人</div></div>`;
+    }).join('');
+    return `<div class="adm-act">
+      <div class="adm-act-hd" onclick="toggleAct('${a.id}')">
+        <div>
+          <div class="adm-act-title">${a.title}</div>
+          <div class="adm-act-meta">${[a.org,a.ref].filter(Boolean).join(' ・ ')}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="bdg bdg-blue">${total} 人報名</span>
+          <button class="btn btn-danger" style="font-size:11px;padding:3px 9px" onclick="event.stopPropagation();deleteAct('${a.id}')">刪除</button>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="adm-act-body" id="aab_${a.id}">${sessRows}</div>
+    </div>`;
+  }).join('');
+}
+function toggleAct(id){ document.getElementById('aab_'+id).classList.toggle('on'); }
+async function deleteAct(id){
+  if(!confirm('確定刪除此活動？相關報名資料將一併移除。')) return;
+  try{
+    await sbDel('acts','id=eq.'+id);
+    await sbDel('regs','act_id=eq.'+id);
+    acts=acts.filter(a=>a.id!==id); regs=regs.filter(r=>r.act_id!==id);
+    renderAdmActs(); renderPublic(); populateDocSelects(); toast('已刪除活動');
+  }catch(e){ toast('刪除失敗'); }
+}
+async function clearAllActs(){
+  if(!confirm('確定清除所有活動與報名資料？')) return;
+  try{
+    for(const a of acts) await sbDel('acts','id=eq.'+a.id);
+    await sbDel('regs','id=gt.0');
+    acts=[]; regs=[];
+    renderAdmActs(); renderPublic(); renderRegTable(); populateDocSelects(); toast('已清除所有資料');
+  }catch(e){ toast('清除失敗'); }
+}
+
+/* ══════════════════════════════════════════
+   REGISTRATIONS
+══════════════════════════════════════════ */
+async function refreshRegs(){
+  try{
+    regs = await sbGet('regs');
+    renderAdmActs(); renderRegTable();
+  }catch(e){ toast('載入失敗'); }
+}
+function updateStats(){
+  document.getElementById('st-total').textContent = regs.length;
+  document.getElementById('st-acts').textContent  = acts.length;
+  document.getElementById('st-sess').textContent  = [...new Set(regs.map(r=>r.sess_key))].length;
+}
+function renderRegTable(){
+  updateStats();
+  const tabs = document.getElementById('reg-tabs');
+  const wrap = document.getElementById('reg-table-wrap');
+  if(!regs.length){
+    tabs.innerHTML='';
+    wrap.innerHTML='<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">尚無報名資料</div>';
+    return;
+  }
+  const keys = [...new Set(regs.map(r=>r.sess_key))];
+  tabs.innerHTML =
+    `<button class="reg-tab${activeRegTab==='__all__'?' on':''}" onclick="setRegTab('__all__')">全部 <span class="rc">${regs.length}</span></button>` +
+    keys.map(k=>{
+      const p=k.split('||'); const act=acts.find(a=>a.id===p[0])||{};
+      const cnt=regs.filter(r=>r.sess_key===k).length;
+      const short=(act.title||p[0]).slice(0,8)+(act.title&&act.title.length>8?'…':'');
+      return `<button class="reg-tab${activeRegTab===k?' on':''}" onclick="setRegTab('${k}')">${short} ${p[1]} <span class="rc">${cnt}</span></button>`;
+    }).join('');
+
+  let list = activeRegTab==='__all__' ? regs : regs.filter(r=>r.sess_key===activeRegTab);
+  if(!list.length){ wrap.innerHTML='<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">此場次尚無報名資料</div>'; return; }
+
+  const CS=['#E8F0FB','#E6F4ED','#FDF6E7','#FCECEA','#EEEDFE'];
+  const CT=['#1a3a6a','#1d5a38','#6b4a0a','#6a1f1a','#3a3282'];
+  wrap.innerHTML = `<table class="rtable">
+    <thead><tr><th>#</th><th>姓名</th><th>活動</th><th>場次</th><th>報名時間</th></tr></thead>
+    <tbody>${list.map((r,i)=>{
+      const p=r.sess_key.split('||'); const act=acts.find(a=>a.id===p[0])||{}; const ci=i%5;
+      return `<tr>
+        <td style="color:var(--ink3);font-size:12px">${i+1}</td>
+        <td><div style="display:flex;align-items:center;gap:8px"><div class="av" style="background:${CS[ci]};color:${CT[ci]}">${r.name.slice(-2)}</div><span style="font-weight:500">${r.name}</span></div></td>
+        <td style="font-size:12px;color:var(--ink2)">${act.title||p[0]}</td>
+        <td><span style="font-size:12px;color:var(--blue)">${p[1]||''}</span><br><span style="font-size:11px;color:var(--ink3)">${p[2]||''}</span></td>
+        <td style="color:var(--ink3);font-size:12px">${r.reg_time}</td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+}
+function setRegTab(k){ activeRegTab=k; renderRegTable(); }
+
+/* ══════════════════════════════════════════
+   DOC GEN
+══════════════════════════════════════════ */
+function populateDocSelects(){
+  const sel=document.getElementById('doc-act');
+  sel.innerHTML='<option value="">請選擇活動</option>'+acts.map(a=>`<option value="${a.id}">${a.title}</option>`).join('');
+  document.getElementById('doc-sess').innerHTML='<option value="">全部場次</option>';
+}
+function updateDocSess(){
+  const actId=document.getElementById('doc-act').value;
+  const act=acts.find(a=>a.id===actId);
+  const sel=document.getElementById('doc-sess');
+  sel.innerHTML='<option value="">全部場次</option>';
+  if(act) act.dates.forEach(dt=>sel.innerHTML+=`<option value="${actId}||${dt.d}||${dt.t}">${dt.d} ${dt.t}</option>`);
+}
+function genDoc(scope){
+  const actId=document.getElementById('doc-act').value;
+  if(!actId){ toast('請選擇活動'); return; }
+  const act=acts.find(a=>a.id===actId)||{};
+  const sessFilter=document.getElementById('doc-sess').value;
+  let list=regs.filter(r=>r.act_id===actId);
+  if(scope==='cur'&&sessFilter) list=list.filter(r=>r.sess_key===sessFilter);
+  if(!list.length){ toast('此條件尚無報名資料'); return; }
+
+  const sOrg=document.getElementById('doc-org').value.trim()||'○○機關';
+  const sP=document.getElementById('doc-person').value.trim()||'○○○';
+  const sT=document.getElementById('doc-jobtitle').value.trim()||'承辦人';
+  const sTel=document.getElementById('doc-tel').value.trim()||'04-○○○○○○○○';
+  const now=new Date(); const ds=`${now.getFullYear()-1911}年${now.getMonth()+1}月${now.getDate()}日`;
+
+  const byDate={};
+  list.forEach(r=>{ const d=r.sess_key.split('||')[1]; if(!byDate[d]) byDate[d]=[]; byDate[d].push(r); });
+  const nameBlock = Object.keys(byDate).length===1
+    ? list.map((r,i)=>`    ${i+1}. ${r.name}`).join('\n')
+    : Object.entries(byDate).map(([d,l])=>`  【${d}】\n`+l.map((r,i)=>`    ${i+1}. ${r.name}`).join('\n')).join('\n');
+  const dateDesc = sessFilter&&scope==='cur'
+    ? sessFilter.split('||').slice(1).join(' ')
+    : [...new Set(list.map(r=>r.sess_key.split('||')[1]))].join('、');
+  const scopeLabel = sessFilter&&scope==='cur' ? dateDesc : '全部場次';
+
+  const doc=`主　旨：復 貴機關 ${act.ref||'○○字第○號'} 函，有關「${act.title}」辦理參加報名乙案（${scopeLabel}），本機關計有 ${list.length} 名人員擬參加，請查照。
+
+說　明：
+一、依據 貴機關函示，就「${act.title}」辦理招募事宜，本機關收悉後即轉知所屬人員，並彙整參加意願如下。
+
+二、本機關擬參加人員名單如下，共計 ${list.length} 人：
+${nameBlock}
+
+三、參加場次：${dateDesc}
+
+四、如需補充相關資料，請洽本機關承辦人 ${sP}（${sT}），聯絡電話：${sTel}，本機關將全力配合辦理。
+
+正　本：${act.org||'○○機關'}
+副　本：本機關存查
+
+
+                                        ${sOrg}
+                                        ${sT}　${sP}
+                                        中華民國 ${ds}`;
+
+  document.getElementById('doc-out-title').textContent=`回文公文草稿（${scopeLabel}）`;
+  document.getElementById('doc-out-body').textContent=doc;
+  document.getElementById('doc-out-badge').textContent=`共 ${list.length} 名報名者`;
+  document.getElementById('doc-out').style.display='block';
+  document.getElementById('doc-out').scrollIntoView({behavior:'smooth'});
+}
+function cpDoc(withMsg){
+  navigator.clipboard.writeText(document.getElementById('doc-out-body').textContent)
+    .then(()=>toast(withMsg?'已複製！請至公文系統貼上。':'公文全文已複製到剪貼簿'));
+}
+
+/* ══════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════ */
+function closeOverlay(id){ document.getElementById(id).classList.remove('on'); }
+let toastT;
+function toast(msg){ const e=document.getElementById('toast'); e.textContent=msg; e.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>e.classList.remove('on'),2800); }
+
+boot();
+</script>
+</body>
+</html>
