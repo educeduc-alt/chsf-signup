@@ -481,13 +481,17 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
 /* ══════════════════════════════════════════
    CONFIG & STATE
 ══════════════════════════════════════════ */
-let CFG = { url:'', key:'', pass:'' };
+let CFG = {
+  url:  'https://qcbiocalfciliomujevm.supabase.co',
+  key:  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjYmlvY2FsZmNpbGlvbXVqZXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNDcyODEsImV4cCI6MjA5MzYyMzI4MX0.uTn2elgNxQZFYmT7PeiRYICWOgQOnC76R4uf2vJ0GcA',
+  pass: '1234'
+};
 let acts = [], regs = [];
 let activeRegTab = '__all__';
 let selActId = null, selDate = null, selTime = null;
 
-function loadCfg(){ ['url','key','pass'].forEach(k => CFG[k] = localStorage.getItem('ws6_'+k)||''); }
-function saveCfg(){ ['url','key','pass'].forEach(k => localStorage.setItem('ws6_'+k, CFG[k])); }
+function loadCfg(){}
+function saveCfg(){}
 
 /* ══════════════════════════════════════════
    SUPABASE
@@ -501,10 +505,6 @@ async function sbDel(t,q){ const r=await fetch(`${CFG.url}/rest/v1/${t}?${q}`,{m
    BOOT
 ══════════════════════════════════════════ */
 async function boot(){
-  loadCfg();
-  if(!CFG.url||!CFG.key||!CFG.pass){
-    document.getElementById('setup-overlay').classList.add('on'); return;
-  }
   await loadData();
   renderPublic();
 }
@@ -521,13 +521,7 @@ async function loadData(){
    SETUP
 ══════════════════════════════════════════ */
 function saveSetup(){
-  CFG.url  = document.getElementById('cfg-url').value.trim();
-  CFG.key  = document.getElementById('cfg-key').value.trim();
-  CFG.pass = document.getElementById('cfg-pass').value.trim();
-  if(!CFG.url||!CFG.key||!CFG.pass){ document.getElementById('cfg-err').style.display='block'; return; }
-  saveCfg();
   closeOverlay('setup-overlay');
-  boot();
 }
 
 /* ══════════════════════════════════════════
