@@ -286,11 +286,79 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
 
     <!-- 新增活動 -->
     <div id="adm-acts">
+
+      <!-- AI 輔助填表區塊 -->
+      <div class="acard" style="border-color:var(--blue-mid);background:linear-gradient(135deg,#f0f5ff,#f8faff)">
+        <div class="acard-hd" style="margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:32px;height:32px;border-radius:8px;background:var(--blue-lt);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="acard-title" style="margin-bottom:0">AI 輔助填表</div>
+              <div style="font-size:11px;color:var(--ink3);margin-top:1px">用 Claude / ChatGPT 整理 PDF 後，貼上文字自動填入欄位</div>
+            </div>
+          </div>
+          <button class="btn btn-g" style="font-size:11px;padding:4px 10px" onclick="toggleAiHelp()">使用說明</button>
+        </div>
+
+        <!-- 使用說明（預設收合） -->
+        <div id="ai-help-box" style="display:none;background:var(--white);border:1px solid var(--blue-mid);border-radius:9px;padding:14px 16px;margin-bottom:14px;font-size:12px;color:var(--ink2);line-height:1.8">
+          <div style="font-weight:500;color:var(--blue);margin-bottom:8px">📋 操作步驟</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div><span style="background:var(--blue);color:#fff;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;margin-right:6px">1</span>打開 <strong>claude.ai</strong>（或 ChatGPT），上傳 PDF 公文</div>
+            <div><span style="background:var(--blue);color:#fff;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;margin-right:6px">2</span>貼上以下提示詞，請 AI 整理：</div>
+          </div>
+          <div style="background:#f0f2f8;border-radius:7px;padding:10px 13px;margin:10px 0;font-family:monospace;font-size:11px;line-height:1.9;color:var(--ink);position:relative">
+活動名稱：
+主辦機關：
+公文字號：
+截止日期：（民國格式，如113/05/20）
+活動地點：
+研習時數：（如3小時）
+摘要重點：（條列4點，每點一行）
+標籤：（用逗號分隔，如：研習時數3hr,午餐提供）
+場次：（每場一行，格式：日期|時段，如：113/05/14（二）|09:00–12:00）
+            <button onclick="copyPrompt()" style="position:absolute;top:6px;right:6px;font-size:11px;padding:3px 9px;background:var(--blue);color:#fff;border:none;border-radius:5px;cursor:pointer;font-family:'Noto Sans TC',sans-serif">複製</button>
+          </div>
+          <div><span style="background:var(--blue);color:#fff;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;margin-right:6px">3</span>把 AI 回覆的文字貼入下方，點「自動填入欄位」</div>
+        </div>
+
+        <div class="fg" style="margin-bottom:10px">
+          <label>貼上 AI 整理的文字</label>
+          <textarea id="ai-paste" rows="8" placeholder="貼上 Claude 或 ChatGPT 整理好的文字到這裡…
+
+範例格式：
+活動名稱：113年度特殊教育研習
+主辦機關：國立臺南大學特殊教育中心
+公文字號：南大特教字第1130001234號
+截止日期：113/05/20
+活動地點：臺南市政府大樓 B1
+研習時數：3小時
+摘要重點：
+本研習針對特教教師，強化個別化教育計畫撰寫技能。
+全程參與者核發 3 小時研習時數。
+請攜帶識別證，現場提供午餐。
+場次：
+113/05/14（二）|09:00–12:00
+113/05/21（二）|14:00–17:00" style="font-size:12px;line-height:1.7"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-p" style="display:flex;align-items:center;gap:7px" onclick="parseAndFill()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke-linecap="round"/></svg>
+            自動填入欄位
+          </button>
+          <button class="btn btn-g" onclick="document.getElementById('ai-paste').value=''">清除</button>
+          <span id="parse-result" style="font-size:12px;color:var(--green);display:none">✓ 已填入，請確認後發布</span>
+          <span id="parse-err" style="font-size:12px;color:var(--red);display:none"></span>
+        </div>
+      </div>
+
       <div class="acard">
         <div class="acard-hd">
           <div class="acard-title">新增研習活動</div>
         </div>
-        <div class="note-box">參考 PDF 公文內容，手動填寫以下資料，填完後按「新增活動」即發布到報名頁面。</div>
+        <div class="note-box">確認 AI 自動填入的資料，或自行手動填寫，完成後按「發布活動」。</div>
         <div class="form-2">
           <div class="fg"><label>活動名稱 <span class="req">*</span></label><input id="act-name" placeholder="例：113年度特殊教育研習"/></div>
           <div class="fg"><label>主辦機關 <span class="req">*</span></label><input id="act-org" placeholder="例：國立臺南大學特殊教育中心"/></div>
@@ -562,8 +630,117 @@ function admTab(t){
 }
 
 /* ══════════════════════════════════════════
-   ADD ACTIVITY
+   AI 輔助填表
 ══════════════════════════════════════════ */
+function toggleAiHelp(){
+  const box = document.getElementById('ai-help-box');
+  box.style.display = box.style.display==='none' ? 'block' : 'none';
+}
+
+function copyPrompt(){
+  const prompt = `活動名稱：
+主辦機關：
+公文字號：
+截止日期：（民國格式，如113/05/20）
+活動地點：
+研習時數：（如3小時）
+摘要重點：（條列4點，每點一行）
+標籤：（用逗號分隔，如：研習時數3hr,午餐提供）
+場次：（每場一行，格式：日期|時段，如：113/05/14（二）|09:00–12:00）`;
+  navigator.clipboard.writeText(prompt).then(()=>toast('提示詞已複製，請貼到 Claude 或 ChatGPT'));
+}
+
+function parseAndFill(){
+  const raw = document.getElementById('ai-paste').value.trim();
+  const ok  = document.getElementById('parse-result');
+  const err = document.getElementById('parse-err');
+  ok.style.display='none'; err.style.display='none';
+
+  if(!raw){ err.textContent='請先貼上 AI 整理的文字'; err.style.display='inline'; return; }
+
+  // ── 解析各欄位 ──
+  function extract(keys, text){
+    for(const key of keys){
+      const re = new RegExp(key+'[：:]\\s*(.+)', 'i');
+      const m = text.match(re);
+      if(m && m[1].trim()) return m[1].trim();
+    }
+    return '';
+  }
+
+  const name     = extract(['活動名稱','名稱','活動'], raw);
+  const org      = extract(['主辦機關','主辦單位','機關'], raw);
+  const ref      = extract(['公文字號','字號','文號'], raw);
+  const deadline = extract(['截止日期','報名截止','截止'], raw);
+  const place    = extract(['活動地點','地點','場地','舉辦地點'], raw);
+  const hours    = extract(['研習時數','時數','時間'], raw);
+  const tags     = extract(['標籤'], raw);
+
+  // 摘要重點：找「摘要重點」之後的條列文字
+  let pts = [];
+  const ptsMatch = raw.match(/摘要重點[：:]?\s*\n([\s\S]*?)(?=\n標籤|^\s*場次|$)/im);
+  if(ptsMatch){
+    pts = ptsMatch[1].split('\n').map(s=>s.replace(/^[\s\-\.\·\•\d\.]+/,'').trim()).filter(Boolean).slice(0,4);
+  }
+  // 若沒有標題，嘗試找連續條列段落
+  if(!pts.length){
+    const lines = raw.split('\n').map(s=>s.trim()).filter(Boolean);
+    const ptLines = lines.filter(l=>/^[一二三四\-\.\·\•]/.test(l)||l.length>15&&!l.includes('：'));
+    pts = ptLines.slice(0,4).map(s=>s.replace(/^[一二三四\-\.\·\•\s]+/,'').trim());
+  }
+
+  // 場次：找「場次」後面的行，格式 日期|時段 或 日期 時段
+  let dates = [];
+  const sessSection = raw.match(/場次[：:]?\s*\n([\s\S]+)$/im);
+  if(sessSection){
+    const lines = sessSection[1].split('\n').map(s=>s.trim()).filter(Boolean);
+    for(const line of lines){
+      // 支援 | 或全形｜分隔
+      const sep = line.includes('|')?'|':line.includes('｜')?'｜':null;
+      if(sep){
+        const parts = line.split(sep);
+        if(parts.length>=2) dates.push({d:parts[0].trim(), t:parts[1].trim()});
+      } else {
+        // 嘗試用時間格式切割 (09:00–12:00)
+        const m = line.match(/^(.+?)\s+([\d０-９]{2}[:：][\d０-９]{2}[–—\-~～至到][\d０-９]{2}[:：][\d０-９]{2})/);
+        if(m) dates.push({d:m[1].trim(), t:m[2].trim()});
+      }
+    }
+  }
+
+  // ── 填入欄位 ──
+  if(name) document.getElementById('act-name').value = name;
+  if(org)  document.getElementById('act-org').value  = org;
+  if(ref)  document.getElementById('act-ref').value  = ref;
+  if(deadline) document.getElementById('act-deadline').value = deadline;
+  if(place) document.getElementById('act-place').value = place;
+  if(hours) document.getElementById('act-hours').value = hours;
+  if(tags)  document.getElementById('act-tags').value  = tags;
+  if(pts.length) document.getElementById('act-pts').value = pts.join('\n');
+
+  // 場次
+  if(dates.length){
+    const rows = document.getElementById('date-rows');
+    rows.innerHTML = '';
+    dates.forEach(dt => {
+      const div = document.createElement('div');
+      div.className='date-row';
+      div.innerHTML=`<input class="dr-d" value="${dt.d}" placeholder="日期" style="flex:1.5"/><input class="dr-t" value="${dt.t}" placeholder="時段" style="flex:1"/><button class="del-btn" onclick="removeDateRow(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+      rows.appendChild(div);
+    });
+  }
+
+  // 顯示結果
+  const filled = [name,org,ref,deadline,place,hours].filter(Boolean).length;
+  if(filled===0 && !dates.length && !pts.length){
+    err.textContent='解析失敗，請確認格式是否正確（需含「活動名稱：」等標籤）';
+    err.style.display='inline';
+  } else {
+    ok.style.display='inline';
+    // 捲動到填寫區
+    document.getElementById('act-name').scrollIntoView({behavior:'smooth', block:'center'});
+  }
+}
 function addDateRow(){
   const rows = document.getElementById('date-rows');
   const div = document.createElement('div');
