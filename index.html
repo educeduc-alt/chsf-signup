@@ -555,7 +555,7 @@ function renderPublic(){
   if(!acts.length){ empty.style.display='block'; list.style.display='none'; return; }
   empty.style.display='none'; list.style.display='flex';
   list.innerHTML = acts.map(a => {
-    const metaParts = [a.org, a.ref, a.deadline?'截止 '+a.deadline:'', a.place, a.hours?'研習時數：'+a.hours:''].filter(Boolean);
+    const metaParts = [a.org, a.place, a.hours?'研習時數：'+a.hours:''].filter(Boolean);
     const ptsHtml = a.pts&&a.pts.length ? `<div class="apc-pts">${a.pts.map(p=>`<div class="apc-pt">${p}</div>`).join('')}</div>` : '';
     const tagsHtml = a.tags&&a.tags.length ? `<div class="apc-tags">${a.tags.map(t=>`<span class="apc-tag">${t}</span>`).join('')}</div>` : '';
     const sessHtml = a.dates.map(dt =>
@@ -571,7 +571,7 @@ function renderPublic(){
         ${ptsHtml}${tagsHtml}
       </div>
       <div class="apc-body">
-        <div class="apc-sess-label">選擇場次報名</div>
+        <div class="apc-sess-label">請選擇欲參加的場次</div>
         <div class="sess-grid">${sessHtml}</div>
       </div>
     </div>`;
