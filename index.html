@@ -820,7 +820,7 @@ function renderAdmActs(){
       <div class="adm-act-hd" onclick="toggleAct('${a.id}')">
         <div>
           <div class="adm-act-title">${a.title}</div>
-          <div class="adm-act-meta">${[a.org,a.ref].filter(Boolean).join(' ・ ')}</div>
+          <div class="adm-act-meta">${[a.org, a.place, a.hours?'研習時數：'+a.hours:''].filter(Boolean).join('  ·  ')}</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           <span class="bdg bdg-blue">${total} 人報名</span>
