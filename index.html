@@ -175,6 +175,9 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
 .note-box{background:var(--gold-lt);border:1px solid #f0d5a0;border-radius:8px;padding:9px 13px;font-size:12px;color:var(--gold);margin-bottom:14px;line-height:1.6}
+.name-chip{padding:5px 14px;font-size:13px;font-weight:500;border:1.5px solid var(--blue-mid);border-radius:99px;background:var(--white);color:var(--blue);cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .15s}
+.name-chip:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.name-chip.selected{background:var(--blue);color:#fff;border-color:var(--blue)}
 .add-date-btn{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--blue);background:none;border:1px dashed var(--blue-mid);border-radius:7px;padding:6px 14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .14s;margin-top:4px}
 .add-date-btn:hover{background:var(--blue-lt)}
 </style>
@@ -244,7 +247,16 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
       </div>
       <div class="fg">
         <label>您的姓名 <span class="req">*</span></label>
-        <input id="reg-name" placeholder="請輸入姓名" onkeydown="if(event.key==='Enter')submitReg()"/>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+          <span style="font-size:11px;color:var(--ink3);width:100%;margin-bottom:2px">快捷選擇：</span>
+          <button type="button" onclick="pickName('林雨欣')" class="name-chip">林雨欣</button>
+          <button type="button" onclick="pickName('陳微姍')" class="name-chip">陳微姍</button>
+          <button type="button" onclick="pickName('廖梅青')" class="name-chip">廖梅青</button>
+          <button type="button" onclick="pickName('劉曉臻')" class="name-chip">劉曉臻</button>
+          <button type="button" onclick="pickName('賴心榆')" class="name-chip">賴心榆</button>
+          <button type="button" onclick="pickName('施望謙')" class="name-chip">施望謙</button>
+        </div>
+        <input id="reg-name" placeholder="或直接輸入姓名" onkeydown="if(event.key==='Enter')submitReg()"/>
       </div>
       <div id="reg-saving" style="display:none;align-items:center;gap:8px;font-size:13px;color:#6d3fc5;margin-bottom:12px">
         <div class="spin"></div>送出中，請稍候…
@@ -577,11 +589,19 @@ function renderPublic(){
 ══════════════════════════════════════════ */
 function esc(s){ return String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
 
+function pickName(name){
+  document.getElementById('reg-name').value = name;
+  document.querySelectorAll('.name-chip').forEach(b=>{
+    b.classList.toggle('selected', b.textContent===name);
+  });
+}
+
 function openReg(actId, actTitle, d, t){
   selActId=actId; selDate=d; selTime=t;
   document.getElementById('reg-act-name').textContent = actTitle;
   document.getElementById('reg-sess-info').textContent = d+'　'+t;
   document.getElementById('reg-name').value = '';
+  document.querySelectorAll('.name-chip').forEach(b=>b.classList.remove('selected'));
   document.getElementById('reg-form-view').style.display = 'block';
   document.getElementById('reg-success-view').style.display = 'none';
   document.getElementById('reg-saving').style.display = 'none';
