@@ -924,7 +924,7 @@ function renderRegTable(){
   const CS=['#E8F0FB','#E6F4ED','#FDF6E7','#FCECEA','#EEEDFE'];
   const CT=['#1a3a6a','#1d5a38','#6b4a0a','#6a1f1a','#3a3282'];
   wrap.innerHTML = `<table class="rtable">
-    <thead><tr><th>#</th><th>姓名</th><th>活動</th><th>場次</th><th>報名時間</th></tr></thead>
+    <thead><tr><th>#</th><th>姓名</th><th>活動</th><th>場次</th><th>報名時間</th><th></th></tr></thead>
     <tbody>${list.map((r,i)=>{
       const p=r.sess_key.split('||'); const act=acts.find(a=>a.id===p[0])||{}; const ci=i%5;
       return `<tr>
@@ -933,6 +933,7 @@ function renderRegTable(){
         <td style="font-size:12px;color:var(--ink2)">${act.title||p[0]}</td>
         <td><span style="font-size:12px;color:var(--blue)">${p[1]||''}</span><br><span style="font-size:11px;color:var(--ink3)">${p[2]||''}</span></td>
         <td style="color:var(--ink3);font-size:12px">${r.reg_time}</td>
+        <td><button onclick="deleteReg(${r.id})" title="刪除" style="background:none;border:none;cursor:pointer;color:var(--ink3);padding:4px;border-radius:5px;line-height:0" onmouseover="this.style.color='var(--red)';this.style.background='var(--red-lt)'" onmouseout="this.style.color='var(--ink3)';this.style.background='none'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></td>
       </tr>`;
     }).join('')}</tbody></table>`;
 }
@@ -1029,20 +1030,15 @@ function genDoc(scope){
     let list=regs.filter(r=>r.act_id===actId);
     if(sessFilter) list=list.filter(r=>r.sess_key===sessFilter);
     if(!list.length){ toast('此條件尚無報名資料，請改用「無人參加」格式'); return; }
-    const byDate={};
-    list.forEach(r=>{ const d=r.sess_key.split('||')[1]; if(!byDate[d]) byDate[d]=[]; byDate[d].push(r); });
-    const nameBlock = Object.keys(byDate).length===1
-      ? list.map((r,i)=>`    ${i+1}. ${r.name}`).join('\n')
-      : Object.entries(byDate).map(([d,l])=>`  【${d}】\n`+l.map((r,i)=>`    ${i+1}. ${r.name}`).join('\n')).join('\n');
     const dateDesc = sessFilter
       ? sessFilter.split('||').slice(1).join(' ')
       : [...new Set(list.map(r=>r.sess_key.split('||')[1]))].join('、');
+    // 姓名以頓號串接
+    const nameList = list.map(r=>r.name).join('、');
 
     doc=`擬：
 1. 本文為${act.org||'○○機關'}辦理${act.title||'○○研習'}。
-2. 本校資源教室輔導人員擬派員參與，名單如下，共計 ${list.length} 人：
-${nameBlock}
-   參加場次：${dateDesc}
+2. 由資源教室輔導人員${nameList}前往參加。
 3. 文呈閱後存查。
 
 主　旨：復 貴機關 ${act.ref||'○○字第○號'} 函，有關「${act.title}」研習報名事宜，本校計有 ${list.length} 名輔導人員擬參加，請查照。
@@ -1050,8 +1046,7 @@ ${nameBlock}
 說　明：
 一、依據 貴機關函示，本校收悉後即轉知資源教室輔導人員，並彙整參加意願如下。
 
-二、本校擬參加人員名單如下，共計 ${list.length} 人：
-${nameBlock}
+二、本校擬參加人員：資源教室輔導人員${nameList}，共計 ${list.length} 人。
 
 三、參加場次：${dateDesc}
 
