@@ -437,6 +437,11 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
     <div id="adm-doc" style="display:none">
       <div class="acard">
         <div class="acard-hd"><div class="acard-title">產生回文公文</div></div>
+
+        <div class="note-box" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)">
+          選擇活動後，系統會自動產生「有人參加」或「無人參加」的公文格式，請依實際情況選擇。
+        </div>
+
         <div class="fg"><label>選擇活動</label>
           <select id="doc-act" onchange="updateDocSess()" style="padding:9px 12px;font-size:13px;border:1.5px solid var(--line);border-radius:9px;background:var(--white);color:var(--ink);font-family:'Noto Sans TC',sans-serif;width:100%">
             <option value="">請選擇活動</option>
@@ -448,19 +453,25 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
           </select>
         </div>
         <div class="form-4" style="margin-top:4px">
-          <div class="fg"><label>發文機關全銜 <span class="req">*</span></label><input id="doc-org" placeholder="臺中市就業服務處"/></div>
+          <div class="fg"><label>發文機關全銜 <span class="req">*</span></label><input id="doc-org" placeholder="弘光科技大學"/></div>
           <div class="fg"><label>承辦人姓名</label><input id="doc-person" placeholder="王小明"/></div>
           <div class="fg"><label>承辦人職稱</label><input id="doc-jobtitle" placeholder="業務承辦人"/></div>
           <div class="fg"><label>聯絡電話</label><input id="doc-tel" placeholder="04-XXXXXXXX"/></div>
         </div>
-        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
-          <button class="btn btn-g" onclick="genDoc('cur')">產生此場次公文</button>
-          <button class="btn btn-p" onclick="genDoc('all')">產生全部場次統整公文</button>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap">
+          <button class="btn btn-p" onclick="genDoc('attend')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            有人參加 — 產生報名公文
+          </button>
+          <button class="btn btn-g" onclick="genDoc('decline')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            無人參加 — 產生致謝不派員公文
+          </button>
         </div>
         <div class="doc-out" id="doc-out">
           <div class="doc-hdr">
             <div class="doc-hdr-t" id="doc-out-title">回文公文草稿</div>
-            <div class="doc-badge" id="doc-out-badge">共 0 名</div>
+            <div class="doc-badge" id="doc-out-badge"></div>
           </div>
           <div class="doc-body" id="doc-out-body"></div>
           <div class="doc-actions">
@@ -900,54 +911,121 @@ function updateDocSess(){
   sel.innerHTML='<option value="">全部場次</option>';
   if(act) act.dates.forEach(dt=>sel.innerHTML+=`<option value="${actId}||${dt.d}||${dt.t}">${dt.d} ${dt.t}</option>`);
 }
+/* 判斷研習地區，回傳拒絕理由 */
+function getDeclineReason(act){
+  const text = (act.title||'') + (act.org||'') + (act.place||'') + JSON.stringify(act.pts||[]);
+  // 特定優先區域關鍵字
+  const regionMap = [
+    { keywords:['南澎','臺南','台南','澎湖'], region:'南澎區（臺南市、澎湖縣）' },
+    { keywords:['北北基','台北','臺北','基隆','新北'], region:'北北基區（臺北市、新北市、基隆市）' },
+    { keywords:['桃竹苗','桃園','新竹','苗栗'], region:'桃竹苗區（桃園市、新竹市、新竹縣、苗栗縣）' },
+    { keywords:['彰投','彰化','南投'], region:'彰投區（彰化縣、南投縣）' },
+    { keywords:['雲嘉南','雲林','嘉義'], region:'雲嘉南區（雲林縣、嘉義市、嘉義縣）' },
+    { keywords:['高屏','高雄','屏東'], region:'高屏區（高雄市、屏東縣）' },
+    { keywords:['花東','花蓮','臺東','台東'], region:'花東區（花蓮縣、臺東縣）' },
+    { keywords:['宜蘭'], region:'宜蘭縣' },
+  ];
+  for(const r of regionMap){
+    if(r.keywords.some(k=>text.includes(k))){
+      return `此研習為${r.region}大專校院特殊教育輔導人員優先錄取，故此次暫不派員參與。`;
+    }
+  }
+  // 台中或未明確地區
+  return '資源教室輔導人員已有參加過相關研習，故此次暫不派員參與。';
+}
+
 function genDoc(scope){
   const actId=document.getElementById('doc-act').value;
   if(!actId){ toast('請選擇活動'); return; }
   const act=acts.find(a=>a.id===actId)||{};
   const sessFilter=document.getElementById('doc-sess').value;
-  let list=regs.filter(r=>r.act_id===actId);
-  if(scope==='cur'&&sessFilter) list=list.filter(r=>r.sess_key===sessFilter);
-  if(!list.length){ toast('此條件尚無報名資料'); return; }
-
   const sOrg=document.getElementById('doc-org').value.trim()||'○○機關';
   const sP=document.getElementById('doc-person').value.trim()||'○○○';
   const sT=document.getElementById('doc-jobtitle').value.trim()||'承辦人';
   const sTel=document.getElementById('doc-tel').value.trim()||'04-○○○○○○○○';
-  const now=new Date(); const ds=`${now.getFullYear()-1911}年${now.getMonth()+1}月${now.getDate()}日`;
+  const now=new Date();
+  const ds=`${now.getFullYear()-1911}年${now.getMonth()+1}月${now.getDate()}日`;
 
-  const byDate={};
-  list.forEach(r=>{ const d=r.sess_key.split('||')[1]; if(!byDate[d]) byDate[d]=[]; byDate[d].push(r); });
-  const nameBlock = Object.keys(byDate).length===1
-    ? list.map((r,i)=>`    ${i+1}. ${r.name}`).join('\n')
-    : Object.entries(byDate).map(([d,l])=>`  【${d}】\n`+l.map((r,i)=>`    ${i+1}. ${r.name}`).join('\n')).join('\n');
-  const dateDesc = sessFilter&&scope==='cur'
-    ? sessFilter.split('||').slice(1).join(' ')
-    : [...new Set(list.map(r=>r.sess_key.split('||')[1]))].join('、');
-  const scopeLabel = sessFilter&&scope==='cur' ? dateDesc : '全部場次';
+  let doc='', outTitle='', badge='';
 
-  const doc=`主　旨：復 貴機關 ${act.ref||'○○字第○號'} 函，有關「${act.title}」辦理參加報名乙案（${scopeLabel}），本機關計有 ${list.length} 名人員擬參加，請查照。
+  if(scope==='attend'){
+    // ── 有人參加 ──
+    let list=regs.filter(r=>r.act_id===actId);
+    if(sessFilter) list=list.filter(r=>r.sess_key===sessFilter);
+    if(!list.length){ toast('此條件尚無報名資料，請改用「無人參加」格式'); return; }
+    const byDate={};
+    list.forEach(r=>{ const d=r.sess_key.split('||')[1]; if(!byDate[d]) byDate[d]=[]; byDate[d].push(r); });
+    const nameBlock = Object.keys(byDate).length===1
+      ? list.map((r,i)=>`    ${i+1}. ${r.name}`).join('\n')
+      : Object.entries(byDate).map(([d,l])=>`  【${d}】\n`+l.map((r,i)=>`    ${i+1}. ${r.name}`).join('\n')).join('\n');
+    const dateDesc = sessFilter
+      ? sessFilter.split('||').slice(1).join(' ')
+      : [...new Set(list.map(r=>r.sess_key.split('||')[1]))].join('、');
+
+    doc=`擬：
+1. 本文為${act.org||'○○機關'}辦理${act.title||'○○研習'}。
+2. 本校資源教室輔導人員擬派員參與，名單如下，共計 ${list.length} 人：
+${nameBlock}
+   參加場次：${dateDesc}
+3. 文呈閱後存查。
+
+主　旨：復 貴機關 ${act.ref||'○○字第○號'} 函，有關「${act.title}」研習報名事宜，本校計有 ${list.length} 名輔導人員擬參加，請查照。
 
 說　明：
-一、依據 貴機關函示，就「${act.title}」辦理招募事宜，本機關收悉後即轉知所屬人員，並彙整參加意願如下。
+一、依據 貴機關函示，本校收悉後即轉知資源教室輔導人員，並彙整參加意願如下。
 
-二、本機關擬參加人員名單如下，共計 ${list.length} 人：
+二、本校擬參加人員名單如下，共計 ${list.length} 人：
 ${nameBlock}
 
 三、參加場次：${dateDesc}
 
-四、如需補充相關資料，請洽本機關承辦人 ${sP}（${sT}），聯絡電話：${sTel}，本機關將全力配合辦理。
+四、如需補充相關資料，請洽本校承辦人 ${sP}（${sT}），聯絡電話：${sTel}，本校將配合辦理。
 
 正　本：${act.org||'○○機關'}
-副　本：本機關存查
+副　本：本校存查
 
 
                                         ${sOrg}
                                         ${sT}　${sP}
                                         中華民國 ${ds}`;
+    outTitle='回文公文草稿（有人參加）';
+    badge=`共 ${list.length} 名報名者`;
 
-  document.getElementById('doc-out-title').textContent=`回文公文草稿（${scopeLabel}）`;
+  } else {
+    // ── 無人參加 ──
+    const reason = getDeclineReason(act);
+    const dateDesc = act.dates&&act.dates.length
+      ? act.dates.map(d=>d.d+' '+d.t).join('、')
+      : '○○年○月○日';
+
+    doc=`擬：
+1. 本文為${act.org||'○○機關'}辦理${act.title||'○○研習'}。
+2. ${reason}
+3. 文呈閱後存查。
+
+主　旨：復 貴機關 ${act.ref||'○○字第○號'} 函，有關「${act.title}」研習報名事宜，本校本次暫不派員參與，請查照。
+
+說　明：
+一、依據 貴機關函示，本校收悉後即轉知資源教室輔導人員。
+
+二、${reason}
+
+三、感謝 貴機關辦理本次研習，未來如有相關活動，本校將積極鼓勵同仁踴躍參與。
+
+正　本：${act.org||'○○機關'}
+副　本：本校存查
+
+
+                                        ${sOrg}
+                                        ${sT}　${sP}
+                                        中華民國 ${ds}`;
+    outTitle='回文公文草稿（無人參加）';
+    badge='未派員';
+  }
+
+  document.getElementById('doc-out-title').textContent=outTitle;
   document.getElementById('doc-out-body').textContent=doc;
-  document.getElementById('doc-out-badge').textContent=`共 ${list.length} 名報名者`;
+  document.getElementById('doc-out-badge').textContent=badge;
   document.getElementById('doc-out').style.display='block';
   document.getElementById('doc-out').scrollIntoView({behavior:'smooth'});
 }
