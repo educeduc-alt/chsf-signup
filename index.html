@@ -379,6 +379,10 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
           <label>標籤（用逗號分隔）</label>
           <input id="act-tags" placeholder="例：研習時數3hr, 午餐提供, 特教教師"/>
         </div>
+        <div class="fg">
+          <label>特殊教育資訊網報名連結（報名成功後顯示給使用者）</label>
+          <input id="act-speurl" placeholder="https://sencir.spc.ntnu.edu.tw/（留空則顯示預設首頁）"/>
+        </div>
 
         <div class="fg">
           <label>開放場次 <span class="req">*</span>（每行一筆）</label>
@@ -517,6 +521,7 @@ async function sbDel(t,q){ const r=await fetch(`${CFG.url}/rest/v1/${t}?${q}`,{m
 ══════════════════════════════════════════ */
 async function boot(){
   await loadData();
+  await autoCleanExpired();
   renderPublic();
 }
 
@@ -721,6 +726,9 @@ function parseAndFill(){
   if(place) document.getElementById('act-place').value = place;
   if(hours) document.getElementById('act-hours').value = hours;
   if(tags)  document.getElementById('act-tags').value  = tags;
+  // speUrl: try to extract from AI text
+  const speUrlMatch = raw.match(/(?:通報網|特殊教育資訊網|報名網址|報名連結)[：:]\s*(https?:\/\/\S+)/i);
+  if(speUrlMatch) document.getElementById('act-speurl').value = speUrlMatch[1].trim();
   if(pts.length) document.getElementById('act-pts').value = pts.join('\n');
 
   // 場次
@@ -773,9 +781,10 @@ async function addActivity(){
   if(!dates.length){ toast('請至少填寫一個場次'); return; }
 
   const ptsRaw = document.getElementById('act-pts').value.trim();
-  const pts = ptsRaw ? ptsRaw.split('\n').map(s=>s.trim()).filter(Boolean).slice(0,4) : [];
+  const pts = ptsRaw ? ptsRaw.split('\n').map(s=>s.trim()).filter(Boolean) : [];
   const tagsRaw = document.getElementById('act-tags').value.trim();
   const tags = tagsRaw ? tagsRaw.split(',').map(s=>s.trim()).filter(Boolean) : [];
+  const speUrl = document.getElementById('act-speurl').value.trim();
 
   const id = 'act_'+Date.now();
   const data = {
@@ -784,14 +793,14 @@ async function addActivity(){
     deadline: document.getElementById('act-deadline').value.trim(),
     place: document.getElementById('act-place').value.trim(),
     hours: document.getElementById('act-hours').value.trim(),
-    pts, tags, dates
+    pts, tags, dates, speUrl
   };
 
   try{
     await sbPost('acts', {id, data});
     acts.push(data);
     // Clear form
-    ['act-name','act-org','act-ref','act-deadline','act-place','act-hours','act-pts','act-tags'].forEach(id=>document.getElementById(id).value='');
+    ['act-name','act-org','act-ref','act-deadline','act-place','act-hours','act-pts','act-tags','act-speurl'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('date-rows').innerHTML=`<div class="date-row"><input class="dr-d" placeholder="日期 例：113/05/14（二）" style="flex:1.5"/><input class="dr-t" placeholder="時段 例：09:00–12:00" style="flex:1"/><button class="del-btn" onclick="removeDateRow(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`;
     renderAdmActs(); renderPublic(); populateDocSelects();
     toast('✓ 活動已發布！');
@@ -895,6 +904,40 @@ function renderRegTable(){
     }).join('')}</tbody></table>`;
 }
 function setRegTab(k){ activeRegTab=k; renderRegTable(); }
+
+async function deleteReg(id){
+  if(!confirm('確定刪除此筆報名記錄？')) return;
+  try{
+    await sbDel('regs','id=eq.'+id);
+    regs=regs.filter(r=>r.id!==id);
+    renderRegTable(); renderAdmActs();
+    toast('已刪除報名記錄');
+  }catch(e){ toast('刪除失敗：'+e.message); }
+}
+
+/* 自動清除截止日後 7 天的活動與報名資料 */
+async function autoCleanExpired(){
+  const today = new Date();
+  const toDelete = acts.filter(a=>{
+    if(!a.deadline) return false;
+    const raw = a.deadline.trim();
+    const parts = raw.split('/');
+    if(parts.length<3) return false;
+    const year = parseInt(parts[0]) + (parseInt(parts[0]) < 1000 ? 1911 : 0);
+    const deadline = new Date(year, parseInt(parts[1])-1, parseInt(parts[2]));
+    const diffDays = (today - deadline) / (1000*60*60*24);
+    return diffDays > 7;
+  });
+  for(const a of toDelete){
+    try{
+      await sbDel('regs','act_id=eq.'+a.id);
+      await sbDel('acts','id=eq.'+a.id);
+      acts=acts.filter(x=>x.id!==a.id);
+      regs=regs.filter(r=>r.act_id!==a.id);
+    }catch(e){ console.warn('autoClean fail:',e); }
+  }
+  if(toDelete.length){ renderPublic(); console.log(`已自動清除 ${toDelete.length} 筆過期活動`); }
+}
 
 /* ══════════════════════════════════════════
    DOC GEN
