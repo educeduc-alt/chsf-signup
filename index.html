@@ -780,16 +780,6 @@ function parseAndFill(){
     const inlineMatch = raw.match(/講師[：:][ ]*([^。（(]+)/);
     if(inlineMatch) document.getElementById('act-speaker').value = inlineMatch[1].trim();
   }
-  // speUrl: try to extract from AI text
-  // 講師資訊
-  const speakerMatch = raw.match(/講師姓名[：:][ ]*(.+)/);
-  const speakerTitleMatch = raw.match(/講師職稱[：:][ ]*(.+)/);
-  if(speakerMatch) document.getElementById('act-speaker').value = speakerMatch[1].trim();
-  if(speakerTitleMatch) document.getElementById('act-speaker-title').value = speakerTitleMatch[1].trim();
-  if(!speakerMatch){
-    const inlineMatch = raw.match(/講師[：:][ ]*([^。\n]+)/);
-    if(inlineMatch) document.getElementById('act-speaker').value = inlineMatch[1].trim();
-  }
   // speUrl
   const speUrlMatch = raw.match(/(?:通報網|特殊教育資訊網|報名網址|報名連結)[：:][ ]*(https?:\/\/\S+)/i);
   if(speUrlMatch) document.getElementById('act-speurl').value = speUrlMatch[1].trim();
