@@ -839,6 +839,8 @@ async function addActivity(){
   const tagsRaw = document.getElementById('act-tags').value.trim();
   const tags = tagsRaw ? tagsRaw.split(',').map(s=>s.trim()).filter(Boolean) : [];
   const speUrl = document.getElementById('act-speurl').value.trim();
+  const speaker = document.getElementById('act-speaker').value.trim();
+  const speakerTitle = document.getElementById('act-speaker-title').value.trim();
 
   const id = 'act_'+Date.now();
   const data = {
@@ -847,7 +849,7 @@ async function addActivity(){
     deadline: document.getElementById('act-deadline').value.trim(),
     place: document.getElementById('act-place').value.trim(),
     hours: document.getElementById('act-hours').value.trim(),
-    pts, tags, dates, speUrl
+    pts, tags, dates, speUrl, speaker, speakerTitle
   };
 
   try{
