@@ -410,6 +410,21 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
           </button>
         </div>
 
+        <div class="fg">
+          <label>研習日程（每行一筆，格式：時間｜課程名稱）</label>
+          <div class="date-rows" id="sched-rows">
+            <div class="date-row">
+              <input class="sc-t" placeholder="時間 例：09:00–10:30" style="flex:1"/>
+              <input class="sc-n" placeholder="課程名稱 例：強迫症的精神病理與病程" style="flex:2.5"/>
+              <button class="del-btn" onclick="this.closest('.date-row').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
+          </div>
+          <button class="add-date-btn" onclick="addSchedRow()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            新增日程
+          </button>
+        </div>
+
         <div style="text-align:right;margin-top:4px">
           <button class="btn btn-p" onclick="addActivity()">發布活動到報名頁面</button>
         </div>
@@ -578,6 +593,16 @@ function renderPublic(){
           ${(a.speaker)?`<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${a.speaker}${a.speakerTitle?' ／ '+a.speakerTitle:''}</span>`:''}
         </div>
         ${ptsHtml}
+        ${a.schedule&&a.schedule.length?`
+        <div style="margin-top:14px;border-top:1px solid rgba(255,255,255,.15);padding-top:12px">
+          <div style="font-size:11px;font-weight:500;color:rgba(255,255,255,.6);letter-spacing:.08em;margin-bottom:8px">研習日程</div>
+          <div style="display:flex;flex-direction:column;gap:5px">${a.schedule.map(s=>`
+            <div style="display:flex;gap:10px;font-size:12px">
+              <span style="color:rgba(255,255,255,.55);flex-shrink:0;min-width:90px">${s.t}</span>
+              <span style="color:rgba(255,255,255,.88)">${s.n}</span>
+            </div>`).join("")}
+          </div>
+        </div>`:""}
       </div>
       <div class="apc-body">
         <div class="apc-sess-label">請選擇欲參加的場次</div>
@@ -804,7 +829,13 @@ function parseAndFill(){
     document.getElementById('act-name').scrollIntoView({behavior:'smooth', block:'center'});
   }
 }
-function addDateRow(){
+function addSchedRow(){
+  const rows = document.getElementById('sched-rows');
+  const div = document.createElement('div');
+  div.className='date-row';
+  div.innerHTML=`<input class="sc-t" placeholder="時間 例：09:00–10:30" style="flex:1"/><input class="sc-n" placeholder="課程名稱" style="flex:2.5"/><button class="del-btn" onclick="this.closest('.date-row').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+  rows.appendChild(div);
+}
   const rows = document.getElementById('date-rows');
   const div = document.createElement('div');
   div.className='date-row';
@@ -838,6 +869,15 @@ async function addActivity(){
   const speaker = document.getElementById('act-speaker').value.trim();
   const speakerTitle = document.getElementById('act-speaker-title').value.trim();
 
+  // 讀取研習日程
+  const schedRows = document.querySelectorAll('#sched-rows .date-row');
+  const schedule = [];
+  schedRows.forEach(row => {
+    const t = row.querySelector('.sc-t').value.trim();
+    const n = row.querySelector('.sc-n').value.trim();
+    if(t||n) schedule.push({t, n});
+  });
+
   const id = 'act_'+Date.now();
   const data = {
     id, title:name, org,
@@ -845,7 +885,7 @@ async function addActivity(){
     deadline: document.getElementById('act-deadline').value.trim(),
     place: document.getElementById('act-place').value.trim(),
     hours: document.getElementById('act-hours').value.trim(),
-    pts, tags, dates, speUrl, speaker, speakerTitle
+    pts, tags, dates, speUrl, speaker, speakerTitle, schedule
   };
 
   try{
@@ -853,6 +893,7 @@ async function addActivity(){
     acts.push(data);
     // Clear form
     ['act-name','act-org','act-ref','act-deadline','act-place','act-hours','act-pts','act-tags','act-speurl','act-speaker','act-speaker-title'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('sched-rows').innerHTML=`<div class="date-row"><input class="sc-t" placeholder="時間 例：09:00–10:30" style="flex:1"/><input class="sc-n" placeholder="課程名稱" style="flex:2.5"/><button class="del-btn" onclick="this.closest('.date-row').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`;
     document.getElementById('date-rows').innerHTML=`<div class="date-row"><input class="dr-d" placeholder="日期 例：113/05/14（二）" style="flex:1.5"/><input class="dr-t" placeholder="時段 例：09:00–12:00" style="flex:1"/><button class="del-btn" onclick="removeDateRow(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`;
     renderAdmActs(); renderPublic(); populateDocSelects();
     toast('✓ 活動已發布！');
@@ -885,7 +926,17 @@ function renderAdmActs(){
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
-      <div class="adm-act-body" id="aab_${a.id}">${speakerRow}${sessRows}</div>
+      <div class="adm-act-body" id="aab_${a.id}">${speakerRow}${sessRows}${a.schedule&&a.schedule.length?`
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line2)">
+          <div style="font-size:11px;font-weight:500;color:var(--ink3);letter-spacing:.06em;margin-bottom:7px">研習日程</div>
+          <div style="display:flex;flex-direction:column;gap:4px">${a.schedule.map(s=>`
+            <div style="display:flex;gap:10px;font-size:12px;padding:4px 0;border-bottom:1px solid var(--line2)">
+              <span style="color:var(--ink3);flex-shrink:0;min-width:100px">${s.t}</span>
+              <span style="color:var(--ink2)">${s.n}</span>
+            </div>`).join("")}
+          </div>
+        </div>`:""}
+      </div>
     </div>`;
   }).join('');
 }
