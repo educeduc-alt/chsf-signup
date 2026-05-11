@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>研習活動報名</title>
+<title>弘光資教研習報名系統</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600&family=Noto+Sans+TC:wght@300;400;500&display=swap');
 :root{
@@ -14,7 +14,7 @@
   --red:#c0392b;--red-lt:#fcecea;
   --ink:#1a1a2e;--ink2:#4a4a6a;--ink3:#8888aa;
   --line:#e2e4ed;--line2:#f0f2f8;
-  --bg:#f4f5f9;--white:#fff;
+  --bg:#f5f8fa;--white:#fff;
   --r:12px;
   --sh:0 1px 4px rgba(28,43,74,.07),0 4px 16px rgba(28,43,74,.06);
   --sh2:0 8px 32px rgba(28,43,74,.14);
@@ -33,34 +33,34 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
 .merr{font-size:12px;color:var(--red);margin-bottom:10px;display:none;text-align:center}
 
 /* ── PUBLIC HEADER ── */
-.pub-hdr{background:var(--navy);padding:0 32px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 0 rgba(255,255,255,.06)}
-.pub-brand{font-family:'Noto Serif TC',serif;font-size:15px;color:#fff;font-weight:600;letter-spacing:.05em}
-.pub-admin-btn{padding:5px 14px;font-size:12px;color:rgba(255,255,255,.45);background:none;border:1px solid rgba(255,255,255,.15);border-radius:7px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .15s}
-.pub-admin-btn:hover{color:rgba(255,255,255,.8);border-color:rgba(255,255,255,.35)}
+.pub-hdr{background:#fff;padding:0 32px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid #e8eef3;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.pub-brand{font-family:'Noto Serif TC',serif;font-size:15px;color:#3a5f7a;font-weight:600;letter-spacing:.05em}
+.pub-admin-btn{padding:5px 14px;font-size:12px;color:#7a9ab0;background:none;border:1px solid #c8dae6;border-radius:7px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .15s}
+.pub-admin-btn:hover{color:#3a5f7a;border-color:#8ab4cc;background:#f0f7fb}
 
 /* ── PUBLIC PAGE ── */
 .pub-inner{max-width:820px;margin:0 auto;padding:36px 24px 72px}
 .pub-hero{text-align:center;margin-bottom:36px}
-.pub-hero h2{font-family:'Noto Serif TC',serif;font-size:26px;font-weight:600;color:var(--navy);margin-bottom:8px}
-.pub-hero p{font-size:14px;color:var(--ink3)}
+.pub-hero h2{font-family:'Noto Serif TC',serif;font-size:26px;font-weight:600;color:#1a3a52;margin-bottom:8px}
+.pub-hero p{font-size:14px;color:#4a6880}
 .act-list{display:flex;flex-direction:column;gap:20px}
-.act-pub-card{background:var(--white);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
-.apc-top{background:linear-gradient(135deg,var(--navy),var(--navy2));padding:20px 24px}
-.apc-title{font-family:'Noto Serif TC',serif;font-size:17px;font-weight:500;color:#fff;margin-bottom:5px}
-.apc-meta{font-size:12px;color:rgba(255,255,255,.5);line-height:1.7}
+.act-pub-card{background:#fff;border:1px solid #dce8f0;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(74,127,165,.08)}
+.apc-top{background:linear-gradient(135deg,#f0f6fa,#e8f2f8);padding:22px 24px;border-bottom:1px solid #dce8f0}
+.apc-title{font-family:'Noto Serif TC',serif;font-size:17px;font-weight:600;color:#1a2e3d;margin-bottom:6px}
+.apc-meta{font-size:12px;color:#4a6880;line-height:1.7}
 .apc-pts{margin-top:12px;display:flex;flex-direction:column;gap:5px}
-.apc-pt{font-size:12px;color:rgba(255,255,255,.5);display:flex;gap:8px;line-height:1.5}
-.apc-pt::before{content:'·';flex-shrink:0}
+.apc-pt{font-size:12px;color:#3a5068;display:flex;gap:8px;line-height:1.5}
+.apc-pt::before{content:'·';flex-shrink:0;color:#a8c4d8}
 .apc-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.apc-tag{font-size:11px;font-weight:500;padding:2px 9px;border-radius:99px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15)}
-.apc-body{padding:20px 24px}
-.apc-sess-label{font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:10px}
+.apc-tag{font-size:11px;font-weight:500;padding:2px 9px;border-radius:99px;background:rgba(74,127,165,.1);color:#4a7fa5;border:1px solid rgba(74,127,165,.15)}
+.apc-body{padding:20px 24px;background:#fff}
+.apc-sess-label{font-size:12px;font-weight:500;color:#3a5a70;margin-bottom:10px}
 .sess-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:8px}
-.sess-btn{padding:12px 14px;border:1.5px solid var(--line);border-radius:9px;background:var(--white);cursor:pointer;text-align:left;font-family:'Noto Sans TC',sans-serif;transition:all .16s;position:relative}
-.sess-btn:hover{border-color:var(--blue-mid);background:var(--blue-lt);transform:translateY(-1px);box-shadow:0 2px 8px rgba(37,99,168,.1)}
-.sess-btn .sd{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px}
-.sess-btn .st{font-size:11px;color:var(--ink3)}
-.sess-btn .sa{font-size:11px;color:var(--blue);margin-top:5px;font-weight:500}
+.sess-btn{padding:12px 14px;border:1.5px solid #dce8f0;border-radius:9px;background:#fff;cursor:pointer;text-align:left;font-family:'Noto Sans TC',sans-serif;transition:all .16s;position:relative}
+.sess-btn:hover{border-color:#a8c8e0;background:#f0f7fb;transform:translateY(-1px);box-shadow:0 2px 8px rgba(74,127,165,.1)}
+.sess-btn .sd{font-size:13px;font-weight:600;color:#111;margin-bottom:2px}
+.sess-btn .st{font-size:11px;color:#333}
+.sess-btn .sa{font-size:11px;color:#1a5a8a;margin-top:5px;font-weight:500}
 .pub-empty{text-align:center;padding:60px 20px;color:var(--ink3)}
 .pub-empty svg{width:52px;height:52px;stroke:var(--line);margin:0 auto 14px;display:block}
 .pub-empty h3{font-size:16px;font-weight:500;margin-bottom:6px;color:var(--ink2)}
@@ -186,7 +186,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
 
 <!-- ══ PUBLIC SITE ══ -->
 <header class="pub-hdr">
-  <div class="pub-brand">研習活動報名</div>
+  <div class="pub-brand">弘光資教研習報名系統</div>
   <button class="pub-admin-btn" onclick="openLoginModal()">管理員登入</button>
 </header>
 
@@ -564,8 +564,8 @@ function renderPublic(){
     const ptsHtml = a.pts&&a.pts.length ? `<div class="apc-pts">${a.pts.map(p=>`<div class="apc-pt">${p}</div>`).join('')}</div>` : '';
     const sessHtml = a.dates.map(dt =>
       `<button class="sess-btn" onclick="openReg('${esc(a.id)}','${esc(a.title)}','${esc(dt.d)}','${esc(dt.t)}')">
-        <div class="sd">${dt.d}</div>
-        <div class="st">${dt.t}</div>
+        <div class="sd" style="color:#111;font-weight:600">${dt.d}</div>
+        <div class="st" style="color:#333">${dt.t}</div>
         <div class="sa">點此報名 →</div>
       </button>`).join('');
     return `<div class="act-pub-card">
@@ -1060,8 +1060,14 @@ function genDoc(scope){
     // 姓名以頓號串接
     const nameList = list.map(r=>r.name).join('、');
 
+    // 處理標題格式：把【編號】移到前面
+    const rawTitle = act.title||'○○研習';
+    const codeMatch = rawTitle.match(/【[^】]+】/);
+    const code = codeMatch ? codeMatch[0] : '';
+    const titleBody = rawTitle.replace(/【[^】]+】/g,'').trim();
+    const formattedTitle = code ? `${code}「${titleBody}」` : `「${titleBody}」`;
     doc=`擬：
-1. 本文為${act.org||'○○機關'}辦理${act.title||'○○研習'}。
+1. 本文為${act.org||'○○機關'}辦理${formattedTitle}研習實施計畫。
 2. 由資源教室輔導人員${nameList}前往參加。
 3. 文呈閱後存查。`;
     outTitle='回文公文草稿（有人參加）';
@@ -1074,8 +1080,13 @@ function genDoc(scope){
       ? act.dates.map(d=>d.d+' '+d.t).join('、')
       : '○○年○月○日';
 
+    const rawTitle2 = act.title||'○○研習';
+    const codeMatch2 = rawTitle2.match(/【[^】]+】/);
+    const code2 = codeMatch2 ? codeMatch2[0] : '';
+    const titleBody2 = rawTitle2.replace(/【[^】]+】/g,'').trim();
+    const formattedTitle2 = code2 ? `${code2}「${titleBody2}」` : `「${titleBody2}」`;
     doc=`擬：
-1. 本文為${act.org||'○○機關'}辦理${act.title||'○○研習'}。
+1. 本文為${act.org||'○○機關'}辦理${formattedTitle2}研習實施計畫。
 2. ${reason}
 3. 文呈閱後存查。`;
     outTitle='回文公文草稿（無人參加）';
