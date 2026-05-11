@@ -375,6 +375,10 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
           <div class="fg"><label>活動地點</label><input id="act-place" placeholder="例：臺南市政府大樓 B1"/></div>
           <div class="fg"><label>研習時數</label><input id="act-hours" placeholder="例：3小時"/></div>
         </div>
+        <div class="form-2">
+          <div class="fg"><label>講師姓名</label><input id="act-speaker" placeholder="例：丘彥南醫師"/></div>
+          <div class="fg"><label>講師職稱／服務單位</label><input id="act-speaker-title" placeholder="例：臺大醫院精神醫學部特聘兼任主治醫師"/></div>
+        </div>
         <!-- 保留但隱藏，供公文產生用 -->
         <input id="act-ref" type="hidden"/>
         <input id="act-deadline" type="hidden"/>
@@ -566,15 +570,22 @@ function renderPublic(){
         <div class="st">${dt.t}</div>
         <div class="sa">點此報名 →</div>
       </button>`).join('');
+    const speakerHtml = (a.speaker||a.speakerTitle) ? `
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line2);display:flex;align-items:center;gap:8px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" style="flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span style="font-size:13px;font-weight:500;color:var(--ink)">${a.speaker||''}</span>
+        ${a.speakerTitle?`<span style="font-size:12px;color:var(--ink3)">${a.speakerTitle}</span>`:''}
+      </div>` : '';
     return `<div class="act-pub-card">
       <div class="apc-top">
         <div class="apc-title">${a.title}</div>
-        <div class="apc-meta">${metaParts.join('  ·  ')}</div>
+        ${metaParts.length?`<div class="apc-meta">${metaParts.join('  ·  ')}</div>`:''}
         ${ptsHtml}${tagsHtml}
       </div>
       <div class="apc-body">
         <div class="apc-sess-label">請選擇欲參加的場次</div>
         <div class="sess-grid">${sessHtml}</div>
+        ${speakerHtml}
       </div>
     </div>`;
   }).join('');
@@ -759,8 +770,29 @@ function parseAndFill(){
   if(place) document.getElementById('act-place').value = place;
   if(hours) document.getElementById('act-hours').value = hours;
   if(tags)  document.getElementById('act-tags').value  = tags;
+  // 講師資訊
+  const speakerMatch = raw.match(/講師姓名[：:][ ]*(.+)/);
+  const speakerTitleMatch = raw.match(/講師職稱[：:][ ]*(.+)/);
+  if(speakerMatch) document.getElementById('act-speaker').value = speakerMatch[1].trim();
+  if(speakerTitleMatch) document.getElementById('act-speaker-title').value = speakerTitleMatch[1].trim();
+  // 也嘗試從摘要描述中抓取「講師：XXX（職稱）」格式
+  if(!speakerMatch){
+    const inlineMatch = raw.match(/講師[：:][ ]*([^。
+（(]+)/);
+    if(inlineMatch) document.getElementById('act-speaker').value = inlineMatch[1].trim();
+  }
   // speUrl: try to extract from AI text
-  const speUrlMatch = raw.match(/(?:通報網|特殊教育資訊網|報名網址|報名連結)[：:]\s*(https?:\/\/\S+)/i);
+  // 講師資訊
+  const speakerMatch = raw.match(/講師姓名[：:][ ]*(.+)/);
+  const speakerTitleMatch = raw.match(/講師職稱[：:][ ]*(.+)/);
+  if(speakerMatch) document.getElementById('act-speaker').value = speakerMatch[1].trim();
+  if(speakerTitleMatch) document.getElementById('act-speaker-title').value = speakerTitleMatch[1].trim();
+  if(!speakerMatch){
+    const inlineMatch = raw.match(/講師[：:][ ]*([^。\n]+)/);
+    if(inlineMatch) document.getElementById('act-speaker').value = inlineMatch[1].trim();
+  }
+  // speUrl
+  const speUrlMatch = raw.match(/(?:通報網|特殊教育資訊網|報名網址|報名連結)[：:][ ]*(https?:\/\/\S+)/i);
   if(speUrlMatch) document.getElementById('act-speurl').value = speUrlMatch[1].trim();
   if(pts.length) document.getElementById('act-pts').value = pts.join('\n');
 
@@ -833,7 +865,7 @@ async function addActivity(){
     await sbPost('acts', {id, data});
     acts.push(data);
     // Clear form
-    ['act-name','act-org','act-ref','act-deadline','act-place','act-hours','act-pts','act-tags','act-speurl'].forEach(id=>document.getElementById(id).value='');
+    ['act-name','act-org','act-ref','act-deadline','act-place','act-hours','act-pts','act-tags','act-speurl','act-speaker','act-speaker-title'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('date-rows').innerHTML=`<div class="date-row"><input class="dr-d" placeholder="日期 例：113/05/14（二）" style="flex:1.5"/><input class="dr-t" placeholder="時段 例：09:00–12:00" style="flex:1"/><button class="del-btn" onclick="removeDateRow(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`;
     renderAdmActs(); renderPublic(); populateDocSelects();
     toast('✓ 活動已發布！');
@@ -861,7 +893,7 @@ function renderAdmActs(){
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
-      <div class="adm-act-body" id="aab_${a.id}">${sessRows}</div>
+      <div class="adm-act-body" id="aab_${a.id}">${speakerRow}${sessRows}</div>
     </div>`;
   }).join('');
 }
