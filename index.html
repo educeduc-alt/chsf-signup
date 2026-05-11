@@ -777,8 +777,7 @@ function parseAndFill(){
   if(speakerTitleMatch) document.getElementById('act-speaker-title').value = speakerTitleMatch[1].trim();
   // 也嘗試從摘要描述中抓取「講師：XXX（職稱）」格式
   if(!speakerMatch){
-    const inlineMatch = raw.match(/講師[：:][ ]*([^。
-（(]+)/);
+    const inlineMatch = raw.match(/講師[：:][ ]*([^。（(]+)/);
     if(inlineMatch) document.getElementById('act-speaker').value = inlineMatch[1].trim();
   }
   // speUrl: try to extract from AI text
