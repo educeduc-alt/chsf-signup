@@ -866,6 +866,11 @@ function renderAdmActs(){
   if(!acts.length){ el.innerHTML='<div style="text-align:center;padding:24px;color:var(--ink3);font-size:13px">尚無活動</div>'; return; }
   el.innerHTML = acts.map(a => {
     const total = a.dates.reduce((s,dt)=>s+regs.filter(r=>r.sess_key===a.id+'||'+dt.d+'||'+dt.t).length, 0);
+    const speakerRow = (a.speaker||a.speakerTitle) ?
+      `<div style="font-size:12px;color:var(--ink2);padding:7px 12px;border-radius:7px;background:var(--line2);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span style="font-weight:500">${a.speaker||''}</span>${a.speakerTitle?'<span style="color:var(--ink3);margin-left:4px"> ／ '+a.speakerTitle+'</span>':''}
+      </div>` : '';
     const sessRows = a.dates.map(dt=>{
       const cnt = regs.filter(r=>r.sess_key===a.id+'||'+dt.d+'||'+dt.t).length;
       return `<div class="sess-stat-row"><div><div class="ssr-d">${dt.d}</div><div class="ssr-t">${dt.t}</div></div><div class="ssr-cnt">${cnt} 人</div></div>`;
