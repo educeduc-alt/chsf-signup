@@ -49,7 +49,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
 .apc-title{font-family:'Noto Serif TC',serif;font-size:17px;font-weight:500;color:#fff;margin-bottom:5px}
 .apc-meta{font-size:12px;color:rgba(255,255,255,.5);line-height:1.7}
 .apc-pts{margin-top:12px;display:flex;flex-direction:column;gap:5px}
-.apc-pt{font-size:12px;color:rgba(255,255,255,.78);display:flex;gap:8px;line-height:1.5}
+.apc-pt{font-size:12px;color:rgba(255,255,255,.5);display:flex;gap:8px;line-height:1.5}
 .apc-pt::before{content:'·';flex-shrink:0}
 .apc-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .apc-tag{font-size:11px;font-weight:500;padding:2px 9px;border-radius:99px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15)}
@@ -561,31 +561,27 @@ function renderPublic(){
   if(!acts.length){ empty.style.display='block'; list.style.display='none'; return; }
   empty.style.display='none'; list.style.display='flex';
   list.innerHTML = acts.map(a => {
-    const metaParts = [a.org, a.place, a.hours?'研習時數：'+a.hours:''].filter(Boolean);
     const ptsHtml = a.pts&&a.pts.length ? `<div class="apc-pts">${a.pts.map(p=>`<div class="apc-pt">${p}</div>`).join('')}</div>` : '';
-    const tagsHtml = a.tags&&a.tags.length ? `<div class="apc-tags">${a.tags.map(t=>`<span class="apc-tag">${t}</span>`).join('')}</div>` : '';
     const sessHtml = a.dates.map(dt =>
       `<button class="sess-btn" onclick="openReg('${esc(a.id)}','${esc(a.title)}','${esc(dt.d)}','${esc(dt.t)}')">
         <div class="sd">${dt.d}</div>
         <div class="st">${dt.t}</div>
         <div class="sa">點此報名 →</div>
       </button>`).join('');
-    const speakerHtml = (a.speaker||a.speakerTitle) ? `
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line2);display:flex;align-items:center;gap:8px">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" style="flex-shrink:0"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <span style="font-size:13px;font-weight:500;color:var(--ink)">${a.speaker||''}</span>
-        ${a.speakerTitle?`<span style="font-size:12px;color:var(--ink3)">${a.speakerTitle}</span>`:''}
-      </div>` : '';
     return `<div class="act-pub-card">
       <div class="apc-top">
-        <div class="apc-title">${a.title}</div>
-        ${metaParts.length?`<div class="apc-meta">${metaParts.join('  ·  ')}</div>`:''}
-        ${ptsHtml}${tagsHtml}
+        <div class="apc-title" style="font-size:19px;font-weight:600;color:#fff;margin-bottom:10px">${a.title}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:${ptsHtml?'14px':'0'}">
+          ${a.org?`<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>${a.org}</span>`:''}
+          ${a.place?`<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${a.place}</span>`:''}
+          ${a.hours?`<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${a.hours}</span>`:''}
+          ${(a.speaker)?`<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${a.speaker}${a.speakerTitle?' ／ '+a.speakerTitle:''}</span>`:''}
+        </div>
+        ${ptsHtml}
       </div>
       <div class="apc-body">
         <div class="apc-sess-label">請選擇欲參加的場次</div>
         <div class="sess-grid">${sessHtml}</div>
-        ${speakerHtml}
       </div>
     </div>`;
   }).join('');
