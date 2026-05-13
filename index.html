@@ -756,22 +756,34 @@ function parseAndFill(){
     pts = ptLines.map(s=>s.replace(/^[一二三四\-\.\·\•\s]+/,'').trim());
   }
 
-  // 場次：找「場次」後面的行，格式 日期|時段 或 日期 時段
+  // 場次：找「場次」後面的行，多天研習合併為一個場次
   let dates = [];
   const sessSection = raw.match(/場次[：:]?\s*\n([\s\S]+)$/im);
   if(sessSection){
     const lines = sessSection[1].split('\n').map(s=>s.trim()).filter(Boolean);
+    const parsedDates = [];
     for(const line of lines){
-      // 支援 | 或全形｜分隔
       const sep = line.includes('|')?'|':line.includes('｜')?'｜':null;
       if(sep){
         const parts = line.split(sep);
-        if(parts.length>=2) dates.push({d:parts[0].trim(), t:parts[1].trim()});
+        if(parts.length>=2) parsedDates.push({d:parts[0].trim(), t:parts[1].trim()});
       } else {
-        // 嘗試用時間格式切割 (09:00–12:00)
         const m = line.match(/^(.+?)\s+([\d０-９]{2}[:：][\d０-９]{2}[–—\-~～至到][\d０-９]{2}[:：][\d０-９]{2})/);
-        if(m) dates.push({d:m[1].trim(), t:m[2].trim()});
+        if(m) parsedDates.push({d:m[1].trim(), t:m[2].trim()});
       }
+    }
+    // 連續多天合併為一個場次（如 08/13+08/14 → 「08/13（四）至08/14（五）」）
+    if(parsedDates.length > 1){
+      const firstD = parsedDates[0].d;
+      const lastD  = parsedDates[parsedDates.length-1].d;
+      const firstT = parsedDates[0].t;
+      const lastT  = parsedDates[parsedDates.length-1].t;
+      // 合併時間：第一天開始時間 至 最後一天結束時間
+      const startTime = firstT.split(/[–—\-]/)[0].trim();
+      const endTime   = lastT.split(/[–—\-]/).pop().trim();
+      dates.push({ d: `${firstD} 至 ${lastD}`, t: `${startTime}–${endTime}` });
+    } else {
+      dates = parsedDates;
     }
   }
 
@@ -798,13 +810,14 @@ function parseAndFill(){
   if(speUrlMatch) document.getElementById('act-speurl').value = speUrlMatch[1].trim();
   if(pts.length) document.getElementById('act-pts').value = pts.join('\n');
 
-  // 場次
+  // 場次：支援單天和跨天（含「至」格式）
   if(dates.length){
     const rows = document.getElementById('date-rows');
     rows.innerHTML = '';
     dates.forEach(dt => {
       const div = document.createElement('div');
       div.className='date-row';
+      // 若日期含「至」，顯示完整跨天範圍
       div.innerHTML=`<input class="dr-d" value="${dt.d}" placeholder="日期" style="flex:1.5"/><input class="dr-t" value="${dt.t}" placeholder="時段" style="flex:1"/><button class="del-btn" onclick="removeDateRow(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
       rows.appendChild(div);
     });
