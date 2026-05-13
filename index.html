@@ -561,7 +561,17 @@ function renderPublic(){
   if(!acts.length){ empty.style.display='block'; list.style.display='none'; return; }
   empty.style.display='none'; list.style.display='flex';
   list.innerHTML = acts.map(a => {
-    const ptsHtml = a.pts&&a.pts.length ? `<div class="apc-pts">${a.pts.map(p=>`<div class="apc-pt">${p}</div>`).join('')}</div>` : '';
+    const ptsHtml = a.pts&&a.pts.length ? `<div class="apc-pts">${a.pts.map(p=>{
+      // 日程標題行（【研習日程】）
+      if(/^【.+】/.test(p)) return `<div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.7);letter-spacing:.06em;margin-top:10px;margin-bottom:2px">${p}</div>`;
+      // 時間格式行（如 09:00–10:30　課程名稱）
+      if(/^[\d０-９]{2}[:：]/.test(p)){
+        const m = p.match(/^([\d:：–—\-]+)\s+(.+)/);
+        if(m) return `<div style="display:flex;gap:8px;font-size:12px;line-height:1.5"><span style="color:rgba(255,255,255,.5);flex-shrink:0;min-width:85px;font-family:monospace">${m[1]}</span><span style="color:rgba(255,255,255,.85)">${m[2]}</span></div>`;
+      }
+      // 一般摘要行
+      return `<div class="apc-pt">${p}</div>`;
+    }).join('')}</div>` : '';
     const sessHtml = a.dates.map(dt =>
       `<button class="sess-btn" onclick="openReg('${esc(a.id)}','${esc(a.title)}','${esc(dt.d)}','${esc(dt.t)}')">
         <div class="sd" style="color:#111;font-weight:600">${dt.d}</div>
@@ -727,17 +737,17 @@ function parseAndFill(){
   const hours    = extract(['研習時數','時數','時間'], raw);
   const tags     = extract(['標籤'], raw);
 
-  // 摘要重點：找「摘要重點」之後的條列文字
+  // 摘要重點：找「摘要描述」之後的所有文字（含日程）
   let pts = [];
-  const ptsMatch = raw.match(/(?:摘要重點|摘要描述|活動摘要)[：:]?\s*\n([\s\S]*?)(?=\n標籤|^\s*場次|$)/im);
+  const ptsMatch = raw.match(/(?:摘要重點|摘要描述|活動摘要)[：:]?\s*\n([\s\S]*?)(?=\n講師姓名|\n標籤|\n場次|$)/im);
   if(ptsMatch){
-    pts = ptsMatch[1].split('\n').map(s=>s.replace(/^[\s\-\.\·\•\d\.]+/,'').trim()).filter(Boolean).slice(0,4);
+    pts = ptsMatch[1].split('\n').map(s=>s.trim()).filter(Boolean);
   }
   // 若沒有標題，嘗試找連續條列段落
   if(!pts.length){
     const lines = raw.split('\n').map(s=>s.trim()).filter(Boolean);
     const ptLines = lines.filter(l=>/^[一二三四\-\.\·\•]/.test(l)||l.length>15&&!l.includes('：'));
-    pts = ptLines.slice(0,4).map(s=>s.replace(/^[一二三四\-\.\·\•\s]+/,'').trim());
+    pts = ptLines.map(s=>s.replace(/^[一二三四\-\.\·\•\s]+/,'').trim());
   }
 
   // 場次：找「場次」後面的行，格式 日期|時段 或 日期 時段
@@ -1063,11 +1073,21 @@ function genDoc(scope){
     let list=regs.filter(r=>r.act_id===actId);
     if(sessFilter) list=list.filter(r=>r.sess_key===sessFilter);
     if(!list.length){ toast('此條件尚無報名資料，請改用「無人參加」格式'); return; }
-    const dateDesc = sessFilter
-      ? sessFilter.split('||').slice(1).join(' ')
-      : [...new Set(list.map(r=>r.sess_key.split('||')[1]))].join('、');
-    // 姓名以頓號串接
-    const nameList = list.map(r=>r.name).join('、');
+
+    // 所有場次日期（去重）
+    const allDates = [...new Set(list.map(r=>r.sess_key.split('||')[1]))];
+    // 多天格式：「115/08/13（四）至115/08/14（五）」或單天
+    let dateDesc;
+    if(!sessFilter && allDates.length>1){
+      dateDesc = allDates[0] + '至' + allDates[allDates.length-1];
+    } else if(sessFilter){
+      dateDesc = sessFilter.split('||').slice(1).join(' ');
+    } else {
+      dateDesc = allDates.join('、');
+    }
+
+    // 姓名去重後以頓號串接
+    const nameList = [...new Set(list.map(r=>r.name))].join('、');
 
     // 處理標題格式：把【編號】移到前面
     const rawTitle = act.title||'○○研習';
@@ -1080,7 +1100,7 @@ function genDoc(scope){
 2. 由資源教室輔導人員${nameList}前往參加。
 3. 文呈閱後存查。`;
     outTitle='回文公文草稿（有人參加）';
-    badge=`共 ${list.length} 名報名者`;
+    badge=`共 ${[...new Set(list.map(r=>r.name))].length} 名報名者`;
 
   } else {
     // ── 無人參加 ──
