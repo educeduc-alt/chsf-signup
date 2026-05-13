@@ -737,11 +737,17 @@ function parseAndFill(){
   const hours    = extract(['研習時數','時數','時間'], raw);
   const tags     = extract(['標籤'], raw);
 
-  // 摘要重點：找「摘要描述」之後的所有文字（含日程）
+  // 摘要：找「摘要描述」之後到「講師姓名/標籤/場次」之前的所有內容
   let pts = [];
-  const ptsMatch = raw.match(/(?:摘要重點|摘要描述|活動摘要)[：:]?\s*\n([\s\S]*?)(?=\n講師姓名|\n標籤|\n場次|$)/im);
-  if(ptsMatch){
-    pts = ptsMatch[1].split('\n').map(s=>s.trim()).filter(Boolean);
+  // 先找摘要區塊的起始位置
+  const ptsStart = raw.search(/(?:摘要重點|摘要描述|活動摘要)[：:]/im);
+  if(ptsStart >= 0){
+    // 找起始行結束後的內容
+    const afterLabel = raw.slice(ptsStart).replace(/^.+\n/, ''); // 去掉標題行
+    // 找結束位置（遇到講師姓名、標籤、場次就停）
+    const endMatch = afterLabel.search(/^(?:講師姓名|標籤|場次)[：:]/im);
+    const block = endMatch >= 0 ? afterLabel.slice(0, endMatch) : afterLabel;
+    pts = block.split('\n').map(s=>s.trim()).filter(Boolean);
   }
   // 若沒有標題，嘗試找連續條列段落
   if(!pts.length){
