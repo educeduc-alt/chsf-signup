@@ -293,6 +293,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
     <button class="adm-tab on" id="at-acts" onclick="admTab('acts')">新增活動</button>
     <button class="adm-tab" id="at-regs" onclick="admTab('regs')">報名名單</button>
     <button class="adm-tab" id="at-doc" onclick="admTab('doc')">產生回文公文</button>
+    <button class="adm-tab" id="at-hist" onclick="admTab('hist')">參加記錄</button>
   </div>
   <div class="adm-body">
   <div class="adm-inner">
@@ -497,6 +498,17 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
       </div>
     </div>
 
+    <!-- 參加記錄 -->
+    <div id="adm-hist" style="display:none">
+      <div class="acard">
+        <div class="acard-hd" style="margin-bottom:16px">
+          <div class="acard-title">過往參加研習記錄</div>
+          <div style="font-size:12px;color:var(--ink3);margin-top:2px">依活動顯示所有曾報名的人員記錄</div>
+        </div>
+        <div id="hist-wrap"></div>
+      </div>
+    </div>
+
   </div>
   </div>
 </div>
@@ -684,12 +696,56 @@ function doLogin(){
 }
 function closeAdmin(){ document.getElementById('adm-overlay').classList.remove('on'); renderPublic(); }
 function admTab(t){
-  ['acts','regs','doc'].forEach(id=>{
+  ['acts','regs','doc','hist'].forEach(id=>{
     document.getElementById('adm-'+id).style.display = id===t?'block':'none';
     document.getElementById('at-'+id).classList.toggle('on', id===t);
   });
   if(t==='regs') refreshRegs();
   if(t==='doc') populateDocSelects();
+  if(t==='hist') renderHist();
+}
+
+function renderHist(){
+  const wrap = document.getElementById('hist-wrap');
+  if(!regs.length){
+    wrap.innerHTML='<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">尚無參加記錄</div>';
+    return;
+  }
+  // 依活動分組
+  const actIds = [...new Set(regs.map(r=>r.act_id))];
+  wrap.innerHTML = actIds.map(actId=>{
+    const act = acts.find(a=>a.id===actId)||{title:actId};
+    const actRegs = regs.filter(r=>r.act_id===actId);
+    // 依場次分組
+    const sessKeys = [...new Set(actRegs.map(r=>r.sess_key))];
+    const sessSections = sessKeys.map(sk=>{
+      const p = sk.split('||');
+      const sessRegs = actRegs.filter(r=>r.sess_key===sk);
+      const nameList = sessRegs.map(r=>r.name).join('、');
+      return `<div style="padding:10px 0;border-bottom:1px solid var(--line2)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div>
+            <span style="font-size:13px;font-weight:500;color:var(--blue)">${p[1]||''}</span>
+            <span style="font-size:12px;color:var(--ink3);margin-left:8px">${p[2]||''}</span>
+          </div>
+          <span style="font-size:11px;background:var(--blue-lt);color:var(--blue);padding:2px 8px;border-radius:99px">${sessRegs.length} 人</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${sessRegs.map(r=>`<span style="display:inline-flex;align-items:center;gap:5px;background:var(--line2);border:1px solid var(--line);border-radius:99px;padding:3px 10px;font-size:12px;color:var(--ink2)">${r.name}</span>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:20px;background:var(--white);border:1px solid var(--line);border-radius:12px;overflow:hidden">
+      <div style="background:var(--line2);padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--navy)">${act.title||actId}</div>
+          <div style="font-size:12px;color:var(--ink3);margin-top:2px">${act.org||''}</div>
+        </div>
+        <span style="font-size:12px;font-weight:500;color:var(--ink3)">${actRegs.length} 筆報名</span>
+      </div>
+      <div style="padding:0 16px">${sessSections}</div>
+    </div>`;
+  }).join('');
 }
 
 /* ══════════════════════════════════════════
@@ -908,7 +964,8 @@ function renderAdmActs(){
       </div>` : '';
     const sessRows = a.dates.map(dt=>{
       const cnt = regs.filter(r=>r.sess_key===a.id+'||'+dt.d+'||'+dt.t).length;
-      return `<div class="sess-stat-row"><div><div class="ssr-d">${dt.d}</div><div class="ssr-t">${dt.t}</div></div><div class="ssr-cnt">${cnt} 人</div></div>`;
+      const sk = a.id+'||'+dt.d+'||'+dt.t;
+      return `<div class="sess-stat-row"><div><div class="ssr-d">${dt.d}</div><div class="ssr-t">${dt.t}</div></div><div style="display:flex;align-items:center;gap:8px"><div class="ssr-cnt">${cnt} 人</div>${cnt>0?`<button onclick="event.stopPropagation();clearSessRegs('${sk}')" title="清除此場次報名" style="background:none;border:1px solid var(--line);border-radius:5px;cursor:pointer;color:var(--ink3);padding:3px 7px;font-size:11px;font-family:'Noto Sans TC',sans-serif" onmouseover="this.style.color='var(--red)';this.style.borderColor='var(--red)'" onmouseout="this.style.color='var(--ink3)';this.style.borderColor='var(--line)'">清除報名</button>`:''}</div></div>`;
     }).join('');
     return `<div class="adm-act">
       <div class="adm-act-hd" onclick="toggleAct('${a.id}')">
@@ -977,7 +1034,8 @@ function renderRegTable(){
       const p=k.split('||'); const act=acts.find(a=>a.id===p[0])||{};
       const cnt=regs.filter(r=>r.sess_key===k).length;
       const short=(act.title||p[0]).slice(0,8)+(act.title&&act.title.length>8?'…':'');
-      return `<button class="reg-tab${activeRegTab===k?' on':''}" onclick="setRegTab('${k}')">${short} ${p[1]} <span class="rc">${cnt}</span></button>`;
+      const timeStr = p[2] ? ` ${p[2]}` : '';
+      return `<button class="reg-tab${activeRegTab===k?' on':''}" onclick="setRegTab('${k}')">${short}<br><span style="font-size:10px;opacity:.75">${p[1]}${timeStr}</span> <span class="rc">${cnt}</span></button>`;
     }).join('');
 
   let list = activeRegTab==='__all__' ? regs : regs.filter(r=>r.sess_key===activeRegTab);
@@ -1000,6 +1058,32 @@ function renderRegTable(){
     }).join('')}</tbody></table>`;
 }
 function setRegTab(k){ activeRegTab=k; renderRegTable(); }
+
+async function clearSessRegs(sessKey){
+  const cnt = regs.filter(r=>r.sess_key===sessKey).length;
+  if(!cnt){ toast('此場次沒有報名資料'); return; }
+  if(!confirm(`確定清除此場次 ${cnt} 筆報名記錄？`)) return;
+  try{
+    const ids = regs.filter(r=>r.sess_key===sessKey).map(r=>r.id);
+    for(const id of ids) await sbDel('regs','id=eq.'+id);
+    regs = regs.filter(r=>r.sess_key!==sessKey);
+    renderAdmActs(); renderRegTable();
+    toast(`✓ 已清除 ${cnt} 筆報名記錄`);
+  }catch(e){ toast('清除失敗：'+e.message); }
+}
+
+async function clearSessRegs(sessKey){
+  const cnt = regs.filter(r=>r.sess_key===sessKey).length;
+  if(!cnt){ toast('此場次沒有報名資料'); return; }
+  if(!confirm(`確定清除此場次 ${cnt} 筆報名記錄？`)) return;
+  try{
+    const ids = regs.filter(r=>r.sess_key===sessKey).map(r=>r.id);
+    for(const id of ids) await sbDel('regs','id=eq.'+id);
+    regs = regs.filter(r=>r.sess_key!==sessKey);
+    renderAdmActs(); renderRegTable();
+    toast(`✓ 已清除 ${cnt} 筆報名記錄`);
+  }catch(e){ toast('清除失敗：'+e.message); }
+}
 
 async function deleteReg(id){
   if(!confirm('確定刪除此筆報名記錄？')) return;
