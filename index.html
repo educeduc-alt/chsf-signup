@@ -181,6 +181,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
 .add-date-btn{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--blue);background:none;border:1px dashed var(--blue-mid);border-radius:7px;padding:6px 14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .14s;margin-top:4px}
 .add-date-btn:hover{background:var(--blue-lt)}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -502,8 +503,14 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
     <div id="adm-hist" style="display:none">
       <div class="acard">
         <div class="acard-hd" style="margin-bottom:16px">
-          <div class="acard-title">過往參加研習記錄</div>
-          <div style="font-size:12px;color:var(--ink3);margin-top:2px">依活動顯示所有曾報名的人員記錄</div>
+          <div>
+            <div class="acard-title">過往參加研習記錄</div>
+            <div style="font-size:12px;color:var(--ink3);margin-top:2px">依活動顯示所有曾報名的人員記錄</div>
+          </div>
+          <button class="btn btn-p" id="hist-export-btn" style="font-size:12px;padding:6px 14px;display:none;align-items:center;gap:6px" onclick="exportHistExcel()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            匯出 Excel
+          </button>
         </div>
         <div id="hist-wrap"></div>
       </div>
@@ -733,17 +740,23 @@ function admTab(t){
   if(t==='hist') renderHist();
 }
 
+let _histData = []; // 快取供匯出使用
+
 async function renderHist(){
   const wrap = document.getElementById('hist-wrap');
+  const exportBtn = document.getElementById('hist-export-btn');
   wrap.innerHTML='<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">載入中…</div>';
+  exportBtn.style.display='none';
   try{
-    const res = await fetch(`${CFG.url}/rest/v1/history?order=archived_at.desc`,{headers:sbH()});
+    const res = await fetch(`${CFG.url}/rest/v1/history?order=created_at.desc`,{headers:sbH()});
     if(!res.ok) throw new Error(await res.text());
     const hist = await res.json();
+    _histData = hist;
     if(!hist.length){
       wrap.innerHTML='<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">尚無參加記錄<br><small style="font-size:11px">前台報名後會自動記錄於此</small></div>';
       return;
     }
+    exportBtn.style.display='flex';
     const titles = [...new Map(hist.map(h=>[h.act_id, {title:h.act_title, org:h.act_org}])).entries()];
     wrap.innerHTML = titles.map(([actId, info])=>{
       const actHist = hist.filter(h=>h.act_id===actId);
@@ -763,17 +776,25 @@ async function renderHist(){
           </div>
         </div>`;
       }).join('');
-      const archivedAt = actHist[0]?.archived_at ? new Date(actHist[0].archived_at) : null;
-      const dateStr = archivedAt ? `${archivedAt.getMonth()+1}/${archivedAt.getDate()} 記錄` : '';
+      const createdAt = actHist[0]?.created_at ? new Date(actHist[0].created_at) : null;
+      const dateStr = createdAt ? `${createdAt.getMonth()+1}/${createdAt.getDate()} 記錄` : '';
+      const safeActId = actId.replace(/'/g,"\\'");
       return `<div style="margin-bottom:16px;background:var(--white);border:1px solid var(--line);border-radius:12px;overflow:hidden">
         <div style="background:var(--line2);padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between">
           <div>
             <div style="font-size:14px;font-weight:500;color:var(--navy)">${info.title}</div>
             <div style="font-size:12px;color:var(--ink3);margin-top:2px">${info.org}</div>
           </div>
-          <div style="text-align:right">
-            <div style="font-size:12px;font-weight:500;color:var(--ink3)">${actHist.length} 筆記錄</div>
-            <div style="font-size:11px;color:var(--ink3);margin-top:2px">${dateStr}</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="text-align:right">
+              <div style="font-size:12px;font-weight:500;color:var(--ink3)">${actHist.length} 筆記錄</div>
+              <div style="font-size:11px;color:var(--ink3);margin-top:2px">${dateStr}</div>
+            </div>
+            <button onclick="deleteHistAct('${safeActId}')" title="刪除此活動所有記錄"
+              style="background:none;border:1px solid #f0b8b8;border-radius:7px;cursor:pointer;color:var(--red);padding:5px 10px;font-size:11px;font-family:'Noto Sans TC',sans-serif;white-space:nowrap;transition:all .14s"
+              onmouseover="this.style.background='var(--red-lt)'" onmouseout="this.style.background='none'">
+              刪除
+            </button>
           </div>
         </div>
         <div style="padding:0 16px">${sessSections}</div>
@@ -782,6 +803,56 @@ async function renderHist(){
   }catch(e){
     wrap.innerHTML=`<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">載入失敗：${e.message}<br><small>請確認 Supabase history 資料表已建立並開放權限</small></div>`;
   }
+}
+
+async function deleteHistAct(actId){
+  const info = _histData.find(h=>h.act_id===actId);
+  const title = info?.act_title || actId;
+  if(!confirm(`確定刪除「${title}」的所有參加記錄？此操作無法復原。`)) return;
+  try{
+    const res = await fetch(`${CFG.url}/rest/v1/history?act_id=eq.${encodeURIComponent(actId)}`,{
+      method:'DELETE', headers:sbH()
+    });
+    if(!res.ok) throw new Error(await res.text());
+    _histData = _histData.filter(h=>h.act_id!==actId);
+    toast('✓ 已刪除該活動的參加記錄');
+    renderHist();
+  }catch(e){ toast('刪除失敗：'+e.message); }
+}
+
+function exportHistExcel(){
+  if(!_histData.length){ toast('尚無資料可匯出'); return; }
+  // 整理成二維陣列
+  const rows = [['活動名稱','主辦機關','場次日期','場次時間','姓名','報名時間']];
+  _histData.forEach(h=>{
+    rows.push([h.act_title||'', h.act_org||'', h.sess_date||'', h.sess_time||'', h.name||'', h.reg_time||'']);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  // 欄寬設定
+  ws['!cols'] = [
+    {wch:36},{wch:24},{wch:18},{wch:18},{wch:12},{wch:14}
+  ];
+  // 標頭粗體
+  ['A1','B1','C1','D1','E1','F1'].forEach(cell=>{
+    if(ws[cell]) ws[cell].s = {font:{bold:true}};
+  });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '參加記錄');
+  // 加總分析頁
+  const summary = [['活動名稱','主辦機關','參加人數']];
+  const actMap = new Map();
+  _histData.forEach(h=>{
+    if(!actMap.has(h.act_id)) actMap.set(h.act_id,{title:h.act_title||'',org:h.act_org||'',count:0});
+    actMap.get(h.act_id).count++;
+  });
+  actMap.forEach(v=>summary.push([v.title,v.org,v.count]));
+  const ws2 = XLSX.utils.aoa_to_sheet(summary);
+  ws2['!cols']=[{wch:36},{wch:24},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws2, '活動統計');
+  const now = new Date();
+  const fname = `參加記錄_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  toast('✓ Excel 已下載：'+fname);
 }
 
 /* ══════════════════════════════════════════
