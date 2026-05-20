@@ -1016,15 +1016,20 @@ async function deleteAct(id){
     const actRegs = regs.filter(r=>r.act_id===id);
     for(const r of actRegs){
       const p = r.sess_key.split('||');
-      await sbPost('hist',{
-        act_id: id,
-        act_title: act.title||id,
-        act_org: act.org||'',
-        sess_date: p[1]||'',
-        sess_time: p[2]||'',
-        name: r.name,
-        reg_time: r.reg_time
-      },'return=minimal');
+      const res = await fetch(`${CFG.url}/rest/v1/hist`,{
+        method:'POST',
+        headers:{...sbH(),'Prefer':'return=minimal'},
+        body:JSON.stringify({
+          act_id: id,
+          act_title: act.title||id,
+          act_org: act.org||'',
+          sess_date: p[1]||'',
+          sess_time: p[2]||'',
+          name: r.name,
+          reg_time: r.reg_time
+        })
+      });
+      if(!res.ok){ const err=await res.text(); throw new Error(err); }
     }
     await sbDel('acts','id=eq.'+id);
     await sbDel('regs','act_id=eq.'+id);
