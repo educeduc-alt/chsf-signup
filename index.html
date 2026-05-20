@@ -277,7 +277,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
         <h3>系統報名成功！</h3>
         <p id="success-msg"></p>
         <div id="spe-link-box"></div>
-        <button class="btn btn-g" onclick="closeOverlay('reg-overlay')" style="margin-top:16px">關閉</button>
+        <button class="btn btn-g" onclick="closeOverlay('reg-overlay');renderPublic()" style="margin-top:16px">關閉</button>
       </div>
     </div>
   </div>
@@ -661,6 +661,22 @@ async function submitReg(){
   try{
     const posted = await sbPostReturn('regs', reg);
     regs.push(posted||reg);
+
+    // 同步寫入 hist 參加記錄
+    fetch(`${CFG.url}/rest/v1/hist`,{
+      method:'POST',
+      headers:{...sbH(),'Prefer':'return=minimal'},
+      body:JSON.stringify({
+        act_id: selActId,
+        act_title: act.title||selActId,
+        act_org: act.org||'',
+        sess_date: selDate,
+        sess_time: selTime,
+        name,
+        reg_time: ts
+      })
+    }).catch(e=>console.warn('hist 寫入失敗（不影響報名）:',e));
+
     document.getElementById('reg-saving').style.display='none';
     if(saveBtn) saveBtn.disabled = false;
     document.getElementById('reg-form-view').style.display='none';
