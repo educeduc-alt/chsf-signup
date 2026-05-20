@@ -705,47 +705,58 @@ function admTab(t){
   if(t==='hist') renderHist();
 }
 
-function renderHist(){
+async function renderHist(){
   const wrap = document.getElementById('hist-wrap');
-  if(!regs.length){
-    wrap.innerHTML='<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">尚無參加記錄</div>';
-    return;
-  }
-  // 依活動分組
-  const actIds = [...new Set(regs.map(r=>r.act_id))];
-  wrap.innerHTML = actIds.map(actId=>{
-    const act = acts.find(a=>a.id===actId)||{title:actId};
-    const actRegs = regs.filter(r=>r.act_id===actId);
-    // 依場次分組
-    const sessKeys = [...new Set(actRegs.map(r=>r.sess_key))];
-    const sessSections = sessKeys.map(sk=>{
-      const p = sk.split('||');
-      const sessRegs = actRegs.filter(r=>r.sess_key===sk);
-      const nameList = sessRegs.map(r=>r.name).join('、');
-      return `<div style="padding:10px 0;border-bottom:1px solid var(--line2)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <div>
-            <span style="font-size:13px;font-weight:500;color:var(--blue)">${p[1]||''}</span>
-            <span style="font-size:12px;color:var(--ink3);margin-left:8px">${p[2]||''}</span>
+  wrap.innerHTML='<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">載入中…</div>';
+  try{
+    // 從 hist 資料表讀取所有歷史記錄
+    const res = await fetch(`${CFG.url}/rest/v1/hist?order=archived_at.desc`,{headers:sbH()});
+    if(!res.ok) throw new Error(await res.text());
+    const hist = await res.json();
+    if(!hist.length){
+      wrap.innerHTML='<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">尚無參加記錄<br><small style="font-size:11px">刪除活動時，報名資料會自動存入此頁</small></div>';
+      return;
+    }
+    // 依活動標題分組
+    const titles = [...new Map(hist.map(h=>[h.act_id, {title:h.act_title, org:h.act_org}])).entries()];
+    wrap.innerHTML = titles.map(([actId, info])=>{
+      const actHist = hist.filter(h=>h.act_id===actId);
+      // 依場次分組
+      const sessions = [...new Map(actHist.map(h=>[h.sess_date+'||'+h.sess_time, {date:h.sess_date, time:h.sess_time}])).entries()];
+      const sessSections = sessions.map(([sk, sess])=>{
+        const sessHist = actHist.filter(h=>h.sess_date===sess.date&&h.sess_time===sess.time);
+        return `<div style="padding:10px 0;border-bottom:1px solid var(--line2)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div>
+              <span style="font-size:13px;font-weight:500;color:var(--blue)">${sess.date}</span>
+              <span style="font-size:12px;color:var(--ink3);margin-left:8px">${sess.time}</span>
+            </div>
+            <span style="font-size:11px;background:var(--blue-lt);color:var(--blue);padding:2px 8px;border-radius:99px">${sessHist.length} 人</span>
           </div>
-          <span style="font-size:11px;background:var(--blue-lt);color:var(--blue);padding:2px 8px;border-radius:99px">${sessRegs.length} 人</span>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${sessHist.map(h=>`<span style="display:inline-flex;align-items:center;gap:5px;background:var(--line2);border:1px solid var(--line);border-radius:99px;padding:3px 10px;font-size:12px;color:var(--ink2)">${h.name}</span>`).join('')}
+          </div>
+        </div>`;
+      }).join('');
+      const archivedAt = actHist[0]?.archived_at ? new Date(actHist[0].archived_at) : null;
+      const dateStr = archivedAt ? `${archivedAt.getMonth()+1}/${archivedAt.getDate()} 存檔` : '';
+      return `<div style="margin-bottom:16px;background:var(--white);border:1px solid var(--line);border-radius:12px;overflow:hidden">
+        <div style="background:var(--line2);padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:14px;font-weight:500;color:var(--navy)">${info.title}</div>
+            <div style="font-size:12px;color:var(--ink3);margin-top:2px">${info.org}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:12px;font-weight:500;color:var(--ink3)">${actHist.length} 筆記錄</div>
+            <div style="font-size:11px;color:var(--ink3);margin-top:2px">${dateStr}</div>
+          </div>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px">
-          ${sessRegs.map(r=>`<span style="display:inline-flex;align-items:center;gap:5px;background:var(--line2);border:1px solid var(--line);border-radius:99px;padding:3px 10px;font-size:12px;color:var(--ink2)">${r.name}</span>`).join('')}
-        </div>
+        <div style="padding:0 16px">${sessSections}</div>
       </div>`;
     }).join('');
-    return `<div style="margin-bottom:20px;background:var(--white);border:1px solid var(--line);border-radius:12px;overflow:hidden">
-      <div style="background:var(--line2);padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div style="font-size:14px;font-weight:500;color:var(--navy)">${act.title||actId}</div>
-          <div style="font-size:12px;color:var(--ink3);margin-top:2px">${act.org||''}</div>
-        </div>
-        <span style="font-size:12px;font-weight:500;color:var(--ink3)">${actRegs.length} 筆報名</span>
-      </div>
-      <div style="padding:0 16px">${sessSections}</div>
-    </div>`;
-  }).join('');
+  }catch(e){
+    wrap.innerHTML=`<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">載入失敗：${e.message}<br><small>請確認 Supabase hist 資料表已建立</small></div>`;
+  }
 }
 
 /* ══════════════════════════════════════════
@@ -986,13 +997,28 @@ function renderAdmActs(){
 }
 function toggleAct(id){ document.getElementById('aab_'+id).classList.toggle('on'); }
 async function deleteAct(id){
-  if(!confirm('確定刪除此活動？相關報名資料將一併移除。')) return;
+  if(!confirm('確定刪除此活動？報名資料將存入參加記錄後移除。')) return;
   try{
+    // 備份報名資料到 hist 資料表
+    const act = acts.find(a=>a.id===id)||{};
+    const actRegs = regs.filter(r=>r.act_id===id);
+    for(const r of actRegs){
+      const p = r.sess_key.split('||');
+      await sbPost('hist',{
+        act_id: id,
+        act_title: act.title||id,
+        act_org: act.org||'',
+        sess_date: p[1]||'',
+        sess_time: p[2]||'',
+        name: r.name,
+        reg_time: r.reg_time
+      },'return=minimal');
+    }
     await sbDel('acts','id=eq.'+id);
     await sbDel('regs','act_id=eq.'+id);
     acts=acts.filter(a=>a.id!==id); regs=regs.filter(r=>r.act_id!==id);
-    renderAdmActs(); renderPublic(); populateDocSelects(); toast('已刪除活動');
-  }catch(e){ toast('刪除失敗'); }
+    renderAdmActs(); renderPublic(); populateDocSelects(); toast('已刪除活動，報名記錄已存入參加記錄');
+  }catch(e){ toast('刪除失敗：'+e.message); }
 }
 async function clearAllActs(){
   if(!confirm('確定清除所有活動與報名資料？')) return;
