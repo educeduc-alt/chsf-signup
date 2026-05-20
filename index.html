@@ -737,19 +737,16 @@ async function renderHist(){
   const wrap = document.getElementById('hist-wrap');
   wrap.innerHTML='<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">載入中…</div>';
   try{
-    // 從 hist 資料表讀取所有歷史記錄
-    const res = await fetch(`${CFG.url}/rest/v1/hist?order=archived_at.desc`,{headers:sbH()});
+    const res = await fetch(`${CFG.url}/rest/v1/history?order=archived_at.desc`,{headers:sbH()});
     if(!res.ok) throw new Error(await res.text());
     const hist = await res.json();
     if(!hist.length){
-      wrap.innerHTML='<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">尚無參加記錄<br><small style="font-size:11px">刪除活動時，報名資料會自動存入此頁</small></div>';
+      wrap.innerHTML='<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">尚無參加記錄<br><small style="font-size:11px">前台報名後會自動記錄於此</small></div>';
       return;
     }
-    // 依活動標題分組
     const titles = [...new Map(hist.map(h=>[h.act_id, {title:h.act_title, org:h.act_org}])).entries()];
     wrap.innerHTML = titles.map(([actId, info])=>{
       const actHist = hist.filter(h=>h.act_id===actId);
-      // 依場次分組
       const sessions = [...new Map(actHist.map(h=>[h.sess_date+'||'+h.sess_time, {date:h.sess_date, time:h.sess_time}])).entries()];
       const sessSections = sessions.map(([sk, sess])=>{
         const sessHist = actHist.filter(h=>h.sess_date===sess.date&&h.sess_time===sess.time);
@@ -767,7 +764,7 @@ async function renderHist(){
         </div>`;
       }).join('');
       const archivedAt = actHist[0]?.archived_at ? new Date(actHist[0].archived_at) : null;
-      const dateStr = archivedAt ? `${archivedAt.getMonth()+1}/${archivedAt.getDate()} 存檔` : '';
+      const dateStr = archivedAt ? `${archivedAt.getMonth()+1}/${archivedAt.getDate()} 記錄` : '';
       return `<div style="margin-bottom:16px;background:var(--white);border:1px solid var(--line);border-radius:12px;overflow:hidden">
         <div style="background:var(--line2);padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between">
           <div>
@@ -783,7 +780,7 @@ async function renderHist(){
       </div>`;
     }).join('');
   }catch(e){
-    wrap.innerHTML=`<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">載入失敗：${e.message}<br><small>請確認 Supabase hist 資料表已建立</small></div>`;
+    wrap.innerHTML=`<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">載入失敗：${e.message}<br><small>請確認 Supabase history 資料表已建立並開放權限</small></div>`;
   }
 }
 
