@@ -811,13 +811,14 @@ async function deleteHistAct(actId){
   if(!confirm(`確定刪除「${title}」的所有參加記錄？此操作無法復原。`)) return;
   try{
     const res = await fetch(`${CFG.url}/rest/v1/history?act_id=eq.${encodeURIComponent(actId)}`,{
-      method:'DELETE', headers:sbH()
+      method:'DELETE',
+      headers:{...sbH(),'Prefer':'return=minimal'}
     });
-    if(!res.ok) throw new Error(await res.text());
+    if(!res.ok){ const t=await res.text(); throw new Error(t); }
     _histData = _histData.filter(h=>h.act_id!==actId);
     toast('✓ 已刪除該活動的參加記錄');
     renderHist();
-  }catch(e){ toast('刪除失敗：'+e.message); }
+  }catch(e){ toast('刪除失敗：'+e.message); console.error('deleteHistAct:',e); }
 }
 
 function exportHistExcel(){
