@@ -670,19 +670,22 @@ async function submitReg(){
     regs.push(posted||reg);
 
     // 同步寫入 hist 參加記錄
-    fetch(`${CFG.url}/rest/v1/history`,{
-      method:'POST',
-      headers:{...sbH(),'Prefer':'return=minimal'},
-      body:JSON.stringify({
-        act_id: selActId,
-        act_title: act.title||selActId,
-        act_org: act.org||'',
-        sess_date: selDate,
-        sess_time: selTime,
-        name,
-        reg_time: ts
-      })
-    }).catch(e=>console.warn('hist 寫入失敗（不影響報名）:',e));
+    try{
+      const histRes = await fetch(`${CFG.url}/rest/v1/history`,{
+        method:'POST',
+        headers:{...sbH(),'Prefer':'return=minimal'},
+        body:JSON.stringify({
+          act_id: selActId,
+          act_title: act.title||selActId,
+          act_org: act.org||'',
+          sess_date: selDate,
+          sess_time: selTime,
+          name,
+          reg_time: ts
+        })
+      });
+      if(!histRes.ok) console.warn('hist 寫入失敗:', await histRes.text());
+    }catch(e){ console.warn('hist 寫入失敗:', e); }
 
     document.getElementById('reg-saving').style.display='none';
     if(saveBtn) saveBtn.disabled = false;
