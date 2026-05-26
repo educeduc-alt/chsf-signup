@@ -398,11 +398,12 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
         </div>
 
         <div class="fg">
-          <label>開放場次 <span class="req">*</span>（每行一筆）</label>
+          <label>開放場次 <span class="req">*</span>（每行一筆；地點留空則使用活動主地點）</label>
           <div class="date-rows" id="date-rows">
-            <div class="date-row">
-              <input class="dr-d" placeholder="日期 例：113/05/14（二）" style="flex:1.5"/>
-              <input class="dr-t" placeholder="時段 例：09:00–12:00" style="flex:1"/>
+            <div class="date-row" style="flex-wrap:wrap;gap:6px">
+              <input class="dr-d" placeholder="日期 例：113/05/14（二）" style="flex:1.5;min-width:140px"/>
+              <input class="dr-t" placeholder="時段 例：09:00–12:00" style="flex:1;min-width:100px"/>
+              <input class="dr-p" placeholder="場次地點（選填）" style="flex:2;min-width:160px"/>
               <button class="del-btn" onclick="removeDateRow(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
             </div>
           </div>
@@ -602,15 +603,26 @@ function renderPublic(){
             return `<span style="background:${bg};color:${fg};font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;letter-spacing:.02em">${r.name.slice(-2)}</span>`;
           }).join('')}
         </div>` : '';
+      const sessPlace = dt.p || a.place || '';
       return `<button class="sess-btn" onclick="openReg('${esc(a.id)}','${esc(a.title)}','${esc(dt.d)}','${esc(dt.t)}')">
         <div class="sd" style="color:#111;font-weight:600">${dt.d}</div>
         <div class="st" style="color:#333">${dt.t}</div>
+        ${sessPlace?`<div style="font-size:11px;color:#555;margin-top:3px;display:flex;align-items:flex-start;gap:4px;text-align:left"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg><span>${sessPlace}</span></div>`:''}
         <div class="sa">點此報名 →</div>
         ${bubbles}
       </button>`;
     }).join('');
+    // 日期膠囊
+    const dateLabel = (()=>{
+      if(!a.dates||!a.dates.length) return '';
+      const first = a.dates[0].d;
+      const last  = a.dates[a.dates.length-1].d;
+      const label = first===last ? first : first+'～'+last;
+      return `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.22);color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;letter-spacing:.04em;margin-bottom:8px;border:1px solid rgba(255,255,255,.3)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${label}</span>`;
+    })();
     return `<div class="act-pub-card">
       <div class="apc-top">
+        ${dateLabel}
         <div class="apc-title" style="font-size:19px;font-weight:600;color:#fff;margin-bottom:10px">${a.title}</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:${ptsHtml?'14px':'0'}">
           ${a.org?`<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>${a.org}</span>`:''}
@@ -930,27 +942,54 @@ function parseAndFill(){
     const lines = sessSection[1].split('\n').map(s=>s.trim()).filter(Boolean);
     const parsedDates = [];
     for(const line of lines){
-      const sep = line.includes('|')?'|':line.includes('｜')?'｜':null;
+      // 格式1：【北區場次】115/09/18（五）|09:00–16:40
+      // 先嘗試擷取【...】標籤作為地點前綴
+      const areaMatch = line.match(/^【([^】]+)】(.+)/);
+      const cleanLine = areaMatch ? areaMatch[2].trim() : line;
+      const areaLabel = areaMatch ? `【${areaMatch[1]}】` : '';
+
+      const sep = cleanLine.includes('|')?'|':cleanLine.includes('｜')?'｜':null;
       if(sep){
-        const parts = line.split(sep);
-        if(parts.length>=2) parsedDates.push({d:parts[0].trim(), t:parts[1].trim()});
+        const parts = cleanLine.split(sep);
+        if(parts.length>=2) parsedDates.push({d:(areaLabel+parts[0]).trim(), t:parts[1].trim(), p:areaLabel?areaLabel+'場地':''});
       } else {
-        const m = line.match(/^(.+?)\s+([\d０-９]{2}[:：][\d０-９]{2}[–—\-~～至到][\d０-９]{2}[:：][\d０-９]{2})/);
-        if(m) parsedDates.push({d:m[1].trim(), t:m[2].trim()});
+        const m = cleanLine.match(/^(.+?)\s+([\d０-９]{2}[:：][\d０-９]{2}[–—\-~～至到][\d０-９]{2}[:：][\d０-９]{2})/);
+        if(m) parsedDates.push({d:(areaLabel+m[1]).trim(), t:m[2].trim(), p:''});
       }
     }
-    // 連續多天合併為一個場次（如 08/13+08/14 → 「08/13（四）至08/14（五）」）
-    if(parsedDates.length > 1){
+    // 若各場次地點不同（多區場次），直接保留各場次；同地點才合併
+    const hasMultiArea = parsedDates.some(d=>d.d.includes('】'));
+    if(!hasMultiArea && parsedDates.length > 1){
       const firstD = parsedDates[0].d;
       const lastD  = parsedDates[parsedDates.length-1].d;
       const firstT = parsedDates[0].t;
       const lastT  = parsedDates[parsedDates.length-1].t;
-      // 合併時間：第一天開始時間 至 最後一天結束時間
       const startTime = firstT.split(/[–—\-]/)[0].trim();
       const endTime   = lastT.split(/[–—\-]/).pop().trim();
-      dates.push({ d: `${firstD} 至 ${lastD}`, t: `${startTime}–${endTime}` });
+      dates.push({ d: `${firstD} 至 ${lastD}`, t: `${startTime}–${endTime}`, p:'' });
     } else {
       dates = parsedDates;
+    }
+  }
+
+  // ── 場次地點對應：把活動地點欄位中的【北區】【中區】【南區】對應到各場次 ──
+  if(place && dates.length){
+    // 把地點欄位按行切開，尋找含【...】的行
+    const placeLines = place.split('
+').map(s=>s.trim()).filter(Boolean);
+    const areaPlaceMap = {};
+    for(const pl of placeLines){
+      const m = pl.match(/^【([^】]+)】(.+)/);
+      if(m) areaPlaceMap[m[1]] = pl; // key: 北區場次, value: 【北區場次】...
+    }
+    if(Object.keys(areaPlaceMap).length){
+      dates = dates.map(dt=>{
+        const areaM = dt.d.match(/^【([^】]+)】/);
+        if(areaM && areaPlaceMap[areaM[1]]){
+          return {...dt, p: areaPlaceMap[areaM[1]]};
+        }
+        return dt;
+      });
     }
   }
 
@@ -985,7 +1024,8 @@ function parseAndFill(){
       const div = document.createElement('div');
       div.className='date-row';
       // 若日期含「至」，顯示完整跨天範圍
-      div.innerHTML=`<input class="dr-d" value="${dt.d}" placeholder="日期" style="flex:1.5"/><input class="dr-t" value="${dt.t}" placeholder="時段" style="flex:1"/><button class="del-btn" onclick="removeDateRow(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+      div.style.cssText='flex-wrap:wrap;gap:6px';
+      div.innerHTML=`<input class="dr-d" value="${dt.d}" placeholder="日期" style="flex:1.5;min-width:140px"/><input class="dr-t" value="${dt.t}" placeholder="時段" style="flex:1;min-width:100px"/><input class="dr-p" value="${dt.p||''}" placeholder="場次地點（選填）" style="flex:2;min-width:160px"/><button class="del-btn" onclick="removeDateRow(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
       rows.appendChild(div);
     });
   }
@@ -1012,7 +1052,8 @@ function addDateRow(){
   const rows = document.getElementById('date-rows');
   const div = document.createElement('div');
   div.className='date-row';
-  div.innerHTML=`<input class="dr-d" placeholder="日期 例：113/05/14（二）" style="flex:1.5"/><input class="dr-t" placeholder="時段 例：09:00–12:00" style="flex:1"/><button class="del-btn" onclick="removeDateRow(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+  div.style.cssText='flex-wrap:wrap;gap:6px';
+  div.innerHTML=`<input class="dr-d" placeholder="日期 例：113/05/14（二）" style="flex:1.5;min-width:140px"/><input class="dr-t" placeholder="時段 例：09:00–12:00" style="flex:1;min-width:100px"/><input class="dr-p" placeholder="場次地點（選填）" style="flex:2;min-width:160px"/><button class="del-btn" onclick="removeDateRow(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
   rows.appendChild(div);
 }
 function removeDateRow(btn){
@@ -1030,7 +1071,8 @@ async function addActivity(){
   for(const row of dateRows){
     const d = row.querySelector('.dr-d').value.trim();
     const t = row.querySelector('.dr-t').value.trim();
-    if(d&&t) dates.push({d,t});
+    const p = row.querySelector('.dr-p')?.value.trim()||'';
+    if(d&&t) dates.push({d,t,p});
   }
   if(!dates.length){ toast('請至少填寫一個場次'); return; }
 
