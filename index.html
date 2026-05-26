@@ -612,13 +612,21 @@ function renderPublic(){
         ${bubbles}
       </button>`;
     }).join('');
-    // 日期膠囊
+    // 日期膠囊（排序後取首尾）
     const dateLabel = (()=>{
       if(!a.dates||!a.dates.length) return '';
-      const first = a.dates[0].d;
-      const last  = a.dates[a.dates.length-1].d;
-      const label = first===last ? first : first+'～'+last;
-      return `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.22);color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;letter-spacing:.04em;margin-bottom:8px;border:1px solid rgba(255,255,255,.3)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${label}</span>`;
+      // 把日期字串轉為可排序的格式（去掉括號內星期，純數字比較）
+      const sorted = [...a.dates].sort((x,y)=>{
+        const norm = s => s.replace(/[^\d\/]/g,'').replace(/\//g,'');
+        return norm(x.d).localeCompare(norm(y.d));
+      });
+      const first = sorted[0].d;
+      const last  = sorted[sorted.length-1].d;
+      // 移除【區域】前綴再顯示
+      const clean = s => s.replace(/^【[^】]+】/,'').trim();
+      const label = first===last ? clean(first) : clean(first)+'～'+clean(last);
+      const count = a.dates.length > 1 ? `<span style="margin-left:5px;background:rgba(255,255,255,.25);border-radius:99px;padding:1px 6px;font-size:10px">${a.dates.length} 場</span>` : '';
+      return `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.22);color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;letter-spacing:.04em;margin-bottom:8px;border:1px solid rgba(255,255,255,.3)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${label}${count}</span>`;
     })();
     return `<div class="act-pub-card">
       <div class="apc-top">
