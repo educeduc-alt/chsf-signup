@@ -975,8 +975,7 @@ function parseAndFill(){
   // ── 場次地點對應：把活動地點欄位中的【北區】【中區】【南區】對應到各場次 ──
   if(place && dates.length){
     // 把地點欄位按行切開，尋找含【...】的行
-    const placeLines = place.split('
-').map(s=>s.trim()).filter(Boolean);
+    const placeLines = place.split('\n').map(s=>s.trim()).filter(Boolean);
     const areaPlaceMap = {};
     for(const pl of placeLines){
       const m = pl.match(/^【([^】]+)】(.+)/);
