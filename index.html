@@ -1425,5 +1425,14 @@ function toast(msg){ const e=document.getElementById('toast'); e.textContent=msg
 
 boot();
 </script>
+<!-- 製作者資訊（前台右下角） -->
+<div style="position:fixed;bottom:0;right:20px;background:#fff;border-top:1px solid var(--line);border-left:1px solid var(--line);border-right:1px solid var(--line);border-radius:12px 12px 0 0;padding:16px 24px;box-shadow:0 -4px 20px rgba(0,0,0,.07);z-index:50;line-height:1.8;pointer-events:auto">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+    <span style="font-size:17px;font-weight:700;color:var(--navy)">張家銘</span>
+    <span style="font-size:13px;color:var(--blue);background:var(--blue-lt);padding:2px 10px;border-radius:99px;font-weight:500">技術開發</span>
+  </div>
+  <div style="font-size:14px;color:var(--ink3)">弘光科技大學行政助理</div>
+  <a href="mailto:educeduc@hk.edu.tw" style="font-size:14px;color:var(--blue);text-decoration:none" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">educeduc@hk.edu.tw</a>
+</div>
 </body>
 </html>
