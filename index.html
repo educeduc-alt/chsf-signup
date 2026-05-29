@@ -1,1782 +1,1429 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>同仁點餐意向系統</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>弘光資教研習報名系統</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600&family=Noto+Sans+TC:wght@300;400;500&display=swap');
 :root{
-  --or:#f97316;--ord:#ea580c;--orl:#fff7ed;--orll:#ffedd5;
-  --gr:#16a34a;--grl:#dcfce7;--rd:#dc2626;--rdl:#fee2e2;
-  --am:#d97706;--aml:#fef3c7;--in:#4f46e5;--inl:#eef2ff;
-  --sl:#1e293b;--slm:#475569;--sll:#94a3b8;
-  --bg:#f8f7f4;--ca:#ffffff;--bo:#e2e8f0;--bos:#f1f5f9;
-  --rsm:8px;--rmd:12px;--rlg:16px;--rxl:22px;
-  --shsm:0 1px 4px rgba(0,0,0,.07);--shmd:0 4px 16px rgba(0,0,0,.10);--shlg:0 12px 40px rgba(0,0,0,.14);
+  --navy:#1c2b4a;--navy2:#2d4070;
+  --blue:#2563a8;--blue-lt:#e8f0fb;--blue-mid:#c8d9f5;
+  --gold:#b8922a;--gold-lt:#fdf6e7;
+  --green:#1d7a50;--green-lt:#e6f4ed;
+  --red:#c0392b;--red-lt:#fcecea;
+  --ink:#1a1a2e;--ink2:#4a4a6a;--ink3:#8888aa;
+  --line:#e2e4ed;--line2:#f0f2f8;
+  --bg:#f5f8fa;--white:#fff;
+  --r:12px;
+  --sh:0 1px 4px rgba(28,43,74,.07),0 4px 16px rgba(28,43,74,.06);
+  --sh2:0 8px 32px rgba(28,43,74,.14);
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:15px!important}
-body{font-family:'Noto Sans TC',sans-serif!important;background:var(--bg);color:var(--sl);min-height:100vh;-webkit-font-smoothing:antialiased;font-size:1rem!important}
-button{font-family:inherit;cursor:pointer;border:none;background:none}
-input,select,textarea{font-family:inherit}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:14px;line-height:1.6}
 
-/* ── TOPBAR ── */
-.topbar{background:var(--ca);border-bottom:1px solid var(--bo);position:sticky;top:0;z-index:90;box-shadow:var(--shsm)}
-.topbar-inner{max-width:940px;margin:0 auto;padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between}
-.brand{display:flex;align-items:center;gap:9px;font-family:'Nunito',sans-serif;font-weight:900;font-size:1.1rem;color:var(--or)}
-.brand-icon{width:32px;height:32px;border-radius:10px;background:var(--or);display:flex;align-items:center;justify-content:center;font-size:1rem;box-shadow:0 2px 8px rgba(249,115,22,.35)}
-.brand-sub{font-size:.68rem;color:var(--sll);font-weight:600;letter-spacing:.3px}
+/* ── OVERLAY / MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(20,30,56,.88);z-index:9000;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.on{display:flex}
+.modal{background:var(--white);border-radius:16px;width:100%;max-width:480px;padding:32px 36px;box-shadow:var(--sh2);animation:popIn .2s ease;max-height:90vh;overflow-y:auto}
+@keyframes popIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.modal-title{font-family:'Noto Serif TC',serif;font-size:18px;font-weight:600;margin-bottom:5px;color:var(--navy)}
+.modal-sub{font-size:13px;color:var(--ink3);margin-bottom:22px}
+.merr{font-size:12px;color:var(--red);margin-bottom:10px;display:none;text-align:center}
 
-/* ── TABS ── */
-.tab-bar{background:var(--ca);border-bottom:1px solid var(--bo)}
-.tab-bar-inner{max-width:940px;margin:0 auto;padding:0 16px;display:flex}
-.tab-btn{padding:11px 18px;font-size:.8rem;font-weight:700;color:var(--sll);border-bottom:3px solid transparent;transition:all .18s;white-space:nowrap}
-.tab-btn:hover{color:var(--slm)}
-.tab-btn.on{color:var(--or);border-bottom-color:var(--or)}
-.tab-btn.on-admin{color:var(--sl);border-bottom-color:var(--sl)}
+/* ── PUBLIC HEADER ── */
+.pub-hdr{background:#fff;padding:0 32px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid #e8eef3;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.pub-brand{font-family:'Noto Serif TC',serif;font-size:15px;color:#3a5f7a;font-weight:600;letter-spacing:.05em}
+.pub-admin-btn{padding:5px 14px;font-size:12px;color:#7a9ab0;background:none;border:1px solid #c8dae6;border-radius:7px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .15s}
+.pub-admin-btn:hover{color:#3a5f7a;border-color:#8ab4cc;background:#f0f7fb}
 
-/* ── MAIN ── */
-.main{max-width:940px;margin:0 auto;width:100%;padding:20px 16px 100px}
+/* ── PUBLIC PAGE ── */
+.pub-inner{max-width:820px;margin:0 auto;padding:36px 24px 72px}
+.pub-hero{text-align:center;margin-bottom:36px}
+.pub-hero h2{font-family:'Noto Serif TC',serif;font-size:26px;font-weight:600;color:#1a3a52;margin-bottom:8px}
+.pub-hero p{font-size:14px;color:#4a6880}
+.act-list{display:flex;flex-direction:column;gap:20px}
+.act-pub-card{background:#fff;border:1px solid #dce8f0;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(74,127,165,.08)}
+.apc-top{background:linear-gradient(135deg,#2c4a6e,#3a6090);padding:22px 24px;border-bottom:1px solid #dce8f0}
+.apc-title{font-family:'Noto Serif TC',serif;font-size:17px;font-weight:600;color:#fff;margin-bottom:6px}
+.apc-meta{font-size:12px;color:rgba(255,255,255,.8);line-height:1.7}
+.apc-pts{margin-top:12px;display:flex;flex-direction:column;gap:5px}
+.apc-pt{font-size:12px;color:rgba(255,255,255,.85);display:flex;gap:8px;line-height:1.5}
+.apc-pt::before{content:'·';flex-shrink:0;color:rgba(255,255,255,.5)}
+.apc-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.apc-tag{font-size:11px;font-weight:500;padding:2px 9px;border-radius:99px;background:rgba(74,127,165,.1);color:#4a7fa5;border:1px solid rgba(74,127,165,.15)}
+.apc-body{padding:20px 24px;background:#fff}
+.apc-sess-label{font-size:12px;font-weight:500;color:#3a5a70;margin-bottom:10px}
+.sess-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:8px}
+.sess-btn{padding:12px 14px;border:1.5px solid #dce8f0;border-radius:9px;background:#fff;cursor:pointer;text-align:left;font-family:'Noto Sans TC',sans-serif;transition:all .16s;position:relative}
+.sess-btn:hover{border-color:#a8c8e0;background:#f0f7fb;transform:translateY(-1px);box-shadow:0 2px 8px rgba(74,127,165,.1)}
+.sess-btn .sd{font-size:13px;font-weight:600;color:#111;margin-bottom:2px}
+.sess-btn .st{font-size:11px;color:#333}
+.sess-btn .sa{font-size:11px;color:#1a5a8a;margin-top:5px;font-weight:500}
+.pub-empty{text-align:center;padding:60px 20px;color:var(--ink3)}
+.pub-empty svg{width:52px;height:52px;stroke:var(--line);margin:0 auto 14px;display:block}
+.pub-empty h3{font-size:16px;font-weight:500;margin-bottom:6px;color:var(--ink2)}
+.pub-empty p{font-size:13px}
 
-/* ── SESSION LIST (首頁) ── */
-.page-title{font-family:'Nunito',sans-serif;font-weight:900;font-size:1.1rem;margin-bottom:4px}
-.page-sub{font-size:.8rem;color:var(--sll);margin-bottom:18px}
-
-.event-list{display:flex;flex-direction:column;gap:10px}
-.event-card{background:var(--ca);border:1.5px solid var(--bo);border-radius:var(--rlg);overflow:hidden;cursor:pointer;transition:border-color .18s,box-shadow .18s,transform .18s}
-.event-card:hover{border-color:var(--or);box-shadow:var(--shmd);transform:translateY(-2px)}
-.event-card.closed-card{opacity:.6;cursor:not-allowed;pointer-events:none}
-.ec-top{padding:14px 16px;border-bottom:1px solid var(--bos);display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-.ec-left{flex:1}
-.ec-badges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px}
-.badge{display:inline-flex;align-items:center;gap:3px;font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:20px}
-.badge-open{background:var(--grl);color:var(--gr)}
-.badge-closed{background:var(--rdl);color:var(--rd)}
-.ec-title{font-weight:700;font-size:.95rem;margin-bottom:3px}
-.ec-organizer{font-size:.72rem;color:var(--sll);display:flex;align-items:center;gap:4px}
-.ec-right{text-align:right;flex-shrink:0}
-.ec-deadline{font-size:.72rem;color:var(--rd);font-weight:700;white-space:nowrap}
-.ec-deadline-label{font-size:.65rem;color:var(--sll);margin-bottom:1px}
-.ec-bot{padding:10px 16px;background:var(--bos);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
-.ec-store{font-size:.75rem;color:var(--slm);display:flex;align-items:center;gap:4px}
-.ec-count{font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:20px}
-.ec-count.ok{background:var(--grl);color:var(--gr)}
-.ec-count.warn{background:var(--aml);color:var(--am)}
-.ec-count.none{background:var(--bos);color:var(--sll)}
-.ec-arrow{color:var(--or);font-weight:700;font-size:1rem}
-.empty-events{text-align:center;padding:50px 16px;color:var(--sll)}
-.empty-events .ei{font-size:3rem;display:block;margin-bottom:10px}
-.empty-events p{font-size:.85rem;font-weight:600}
-
-/* ── ORDER PAGE ── */
-.order-page-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
-.back-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:var(--rsm);background:var(--bos);border:1px solid var(--bo);font-size:.75rem;font-weight:700;color:var(--slm);transition:all .15s}
-.back-btn:hover{background:var(--orll);color:var(--ord);border-color:var(--or)}
-.event-info-banner{flex:1;background:var(--orl);border:1.5px solid var(--orll);border-radius:var(--rmd);padding:8px 12px;font-size:.78rem;color:var(--ord)}
-.event-info-banner strong{font-size:.85rem;display:block;margin-bottom:1px}
-
-/* ── NOTICE ── */
-.notice{background:var(--inl);border:1.5px solid #c7d2fe;border-radius:var(--rmd);padding:10px 13px;font-size:.78rem;color:#3730a3;line-height:1.6;margin-bottom:14px;display:flex;gap:8px}
-
-/* ── ID CARD ── */
-.id-card{background:var(--ca);border:1px solid var(--bo);border-radius:var(--rlg);padding:13px 15px;margin-bottom:14px;box-shadow:var(--shsm);display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
-.id-card .fld{flex:1;min-width:120px}
-.id-card label{display:block;font-size:.68rem;font-weight:700;color:var(--sll);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-.inp,.sel{width:100%;border:1.5px solid var(--bo);border-radius:var(--rsm);padding:8px 10px;font-size:.85rem;color:var(--sl);background:var(--ca);outline:none;transition:border-color .18s,box-shadow .18s}
-.inp:focus,.sel:focus{border-color:var(--or);box-shadow:0 0 0 3px rgba(249,115,22,.12)}
-
-/* ── MENU ── */
-.rest-block{margin-bottom:20px}
-.rest-name{font-size:.78rem;font-weight:700;color:var(--slm);background:var(--bos);border-radius:var(--rsm);padding:5px 10px;display:inline-flex;align-items:center;gap:5px;margin-bottom:9px}
-.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:9px}
-@media(max-width:440px){.menu-grid{grid-template-columns:1fr 1fr}}
-.m-card{background:var(--ca);border:1.5px solid var(--bo);border-radius:var(--rlg);padding:13px 11px 11px;cursor:pointer;transition:border-color .18s,transform .18s,box-shadow .18s;position:relative;overflow:hidden;user-select:none}
-.m-card::after{content:'';position:absolute;inset:0;background:var(--orl);opacity:0;transition:opacity .18s;pointer-events:none}
-.m-card:hover{border-color:var(--or);transform:translateY(-2px);box-shadow:var(--shmd)}
-.m-card.sel{border-color:var(--or);box-shadow:var(--shmd)}
-.m-card.sel::after{opacity:1}
-.m-card>*{position:relative;z-index:1}
-.m-emoji{font-size:1.7rem;display:block;margin-bottom:6px}
-.m-name{font-weight:700;font-size:.85rem;line-height:1.3;margin-bottom:2px}
-.m-desc{font-size:.68rem;color:var(--sll);line-height:1.4;margin-bottom:7px}
-.m-price{font-family:'Nunito',sans-serif;font-weight:900;font-size:1.05rem;color:var(--or)}
-.m-spec{font-size:.65rem;color:var(--in);margin-top:2px}
-.qty-row{display:flex;align-items:center;gap:7px;margin-top:7px}
-.qb{width:25px;height:25px;border-radius:50%;border:1.5px solid var(--bo);background:var(--ca);display:flex;align-items:center;justify-content:center;font-size:.95rem;font-weight:700;color:var(--slm);transition:all .15s}
-.qb:hover{background:var(--or);color:#fff;border-color:var(--or)}
-.qn{font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;min-width:18px;text-align:center}
-
-/* ── SPEC SHEET ── */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fi .2s}
-@keyframes fi{from{opacity:0}to{opacity:1}}
-.sheet{background:var(--ca);border-radius:var(--rxl) var(--rxl) 0 0;padding:18px 18px 30px;width:100%;max-width:460px;max-height:78vh;overflow-y:auto;animation:su .23s ease}
-@keyframes su{from{transform:translateY(36px);opacity:0}to{transform:translateY(0);opacity:1}}
-.sheet-handle{width:38px;height:4px;background:var(--bo);border-radius:2px;margin:0 auto 15px}
-.sheet-title{font-family:'Nunito',sans-serif;font-weight:800;font-size:1.05rem;border-left:4px solid var(--or);padding-left:9px;margin-bottom:13px}
-.spec-sec{margin-bottom:12px}
-.spec-lbl{font-size:.68rem;font-weight:700;color:var(--sll);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.spec-opts{display:flex;flex-wrap:wrap;gap:5px}
-.spec-opt{padding:6px 12px;border:1.5px solid var(--bo);border-radius:20px;font-size:.78rem;font-weight:600;background:var(--ca);color:var(--slm);transition:all .15s}
-.spec-opt:hover{border-color:var(--or);color:var(--or)}
-.spec-opt.on{background:var(--or);color:#fff;border-color:var(--or)}
-.note-inp{width:100%;border:1.5px solid var(--bo);border-radius:var(--rsm);padding:8px 10px;font-size:.82rem;resize:none;outline:none;transition:border-color .18s;color:var(--sl)}
-.note-inp:focus{border-color:var(--or)}
-.sheet-qty{display:flex;align-items:center;gap:11px;margin:12px 0}
-.sqb{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--bo);background:var(--ca);font-size:1.1rem;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.sqb:hover{background:var(--or);color:#fff;border-color:var(--or)}
-.sqn{font-family:'Nunito',sans-serif;font-weight:900;font-size:1.25rem;min-width:28px;text-align:center}
-
-/* ── CART ── */
-.cart-panel{background:var(--ca);border:1px solid var(--bo);border-radius:var(--rlg);padding:13px 15px;margin-top:14px;box-shadow:var(--shsm)}
-.cart-row{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px dashed var(--bos);font-size:.85rem;gap:8px}
-.cart-row:last-child{border:none}
-.cart-spec{font-size:.7rem;color:var(--sll);margin-top:1px}
-.cart-note{font-size:.7rem;color:var(--ord);margin-top:1px}
-.cart-total{display:flex;justify-content:space-between;font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;padding-top:9px;border-top:1.5px solid var(--bo);margin-top:3px}
-.cart-total span:first-child{color:var(--sl)}
-.cart-total span:last-child{color:var(--or)}
-
-/* ── SUBMIT BAR ── */
-.sub-bar{position:fixed;bottom:0;left:0;right:0;background:var(--ca);border-top:1px solid var(--bo);padding:11px 16px;z-index:80;box-shadow:0 -4px 20px rgba(0,0,0,.08)}
-.sub-bar-inner{max-width:940px;margin:0 auto}
-.sub-btn{width:100%;padding:13px;border-radius:var(--rmd);background:var(--or);color:#fff;font-family:'Nunito',sans-serif;font-weight:800;font-size:.98rem;transition:all .18s;box-shadow:0 4px 14px rgba(249,115,22,.38)}
-.sub-btn:hover{background:var(--ord);transform:translateY(-1px)}
-.sub-btn:disabled{background:var(--sll);box-shadow:none;cursor:not-allowed;transform:none}
-
-/* ── RECORDS ── */
-.rec-card{background:var(--ca);border:1px solid var(--bo);border-radius:var(--rlg);padding:13px 15px;margin-bottom:10px;box-shadow:var(--shsm);position:relative}
-.rec-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;padding-right:26px;gap:8px}
-.rec-title{font-weight:700;font-size:.88rem}
-.rec-organizer{font-size:.7rem;color:var(--sll);margin-top:1px}
-.rec-badge{font-size:.66rem;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap;background:var(--aml);color:var(--am)}
-.rec-lines{font-size:.8rem;color:var(--slm);line-height:1.75;margin-bottom:7px}
-.rec-foot{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--bos);font-size:.85rem;font-weight:700}
-.rec-price{color:var(--or);font-family:'Nunito',sans-serif}
-.rec-del{position:absolute;top:11px;right:11px;color:var(--sll);padding:3px;border-radius:4px;font-size:.85rem}
-.rec-del:hover{color:var(--rd);background:var(--rdl)}
-.del-cfm{position:absolute;top:8px;right:8px;background:var(--ca);border:1.5px solid var(--bo);border-radius:var(--rsm);padding:8px 10px;box-shadow:var(--shmd);z-index:10;min-width:158px}
-.del-cfm p{font-size:.7rem;color:var(--rd);font-weight:700;margin-bottom:6px}
-.del-cfm-btns{display:flex;gap:5px}
-.dcb-k{font-size:.7rem;padding:3px 9px;border-radius:6px;border:1.5px solid var(--bo);background:var(--bos);color:var(--slm)}
-.dcb-d{font-size:.7rem;padding:3px 9px;border-radius:6px;background:var(--rd);color:#fff}
+/* ── REG MODAL ── */
+.reg-info-box{background:var(--blue-lt);border:1px solid var(--blue-mid);border-radius:8px;padding:10px 14px;margin-bottom:16px}
+.reg-info-act{font-size:13px;font-weight:500;color:var(--blue)}
+.reg-info-sess{font-size:12px;color:var(--ink3);margin-top:2px}
+.success-screen{text-align:center;padding:8px 0 4px}
+.success-icon{width:56px;height:56px;border-radius:50%;background:var(--green-lt);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.success-icon svg{width:28px;height:28px;stroke:var(--green)}
+.success-screen h3{font-family:'Noto Serif TC',serif;font-size:18px;font-weight:500;margin-bottom:8px;color:var(--navy)}
+.success-screen p{font-size:13px;color:var(--ink3);line-height:1.7;margin-bottom:20px}
 
 /* ── ADMIN ── */
-.panel{background:var(--ca);border:1px solid var(--bo);border-radius:var(--rlg);margin-bottom:13px;overflow:hidden;box-shadow:var(--shsm)}
-.panel-head{padding:11px 15px;border-bottom:1px solid var(--bos);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.panel-title{font-family:'Nunito',sans-serif;font-weight:800;font-size:.9rem;display:flex;align-items:center;gap:6px}
-.panel-body{padding:13px 15px}
-.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:13px}
-@media(min-width:500px){.stat-grid{grid-template-columns:repeat(4,1fr)}}
-.stat-box{background:var(--ca);border:1px solid var(--bo);border-radius:var(--rmd);padding:13px;text-align:center;box-shadow:var(--shsm)}
-.stat-n{font-family:'Nunito',sans-serif;font-weight:900;font-size:1.55rem;line-height:1;margin-bottom:2px}
-.stat-l{font-size:.68rem;color:var(--sll);font-weight:600}
-.k-row{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;border-bottom:1px solid var(--bos)}
-.k-row:last-child{border:none}
-.k-item{font-weight:700;font-size:.88rem}
-.k-spec{font-size:.7rem;color:var(--sll);margin-top:1px}
-.k-qty{font-family:'Nunito',sans-serif;font-weight:900;font-size:1.35rem;color:var(--or)}
-.k-sub{font-size:.7rem;color:var(--sll)}
-.bar-wrap{height:4px;background:var(--bos);border-radius:2px;overflow:hidden;margin-top:4px}
-.bar-fill{height:100%;border-radius:2px;background:var(--or)}
-.exp-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px}
-.exp-btn{padding:7px 14px;border-radius:var(--rsm);border:1.5px solid var(--bo);background:var(--ca);font-size:.75rem;font-weight:700;color:var(--slm);display:flex;align-items:center;gap:4px;transition:all .18s;box-shadow:var(--shsm)}
-.exp-btn:hover{border-color:var(--sl);color:var(--sl)}
-.atbl{width:100%;border-collapse:collapse;font-size:.78rem}
-.atbl th{background:var(--bos);padding:8px 11px;text-align:left;font-weight:700;font-size:.68rem;color:var(--sll);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--bo)}
-.atbl td{padding:8px 11px;border-bottom:1px solid var(--bos);vertical-align:top}
-.atbl tr:hover td{background:var(--bos)}
+.adm-overlay{position:fixed;inset:0;background:var(--bg);z-index:500;display:none;flex-direction:column}
+.adm-overlay.on{display:flex}
+.adm-hdr{background:var(--navy);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;flex-shrink:0}
+.adm-hdr-title{font-family:'Noto Serif TC',serif;font-size:15px;color:#fff;font-weight:500}
+.adm-close{padding:5px 14px;font-size:12px;color:rgba(255,255,255,.55);background:none;border:1px solid rgba(255,255,255,.18);border-radius:7px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .15s}
+.adm-close:hover{color:#fff;border-color:rgba(255,255,255,.45)}
+.adm-tabs{background:var(--white);border-bottom:1px solid var(--line);display:flex;padding:0 28px;flex-shrink:0}
+.adm-tab{padding:13px 20px;font-size:13px;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .14s;background:none;border-top:none;border-left:none;border-right:none;font-family:'Noto Sans TC',sans-serif}
+.adm-tab.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:500}
+.adm-body{flex:1;overflow-y:auto;padding:28px 32px}
+.adm-inner{max-width:900px;margin:0 auto}
+.acard{background:var(--white);border:1px solid var(--line);border-radius:var(--r);padding:20px 24px;margin-bottom:16px;box-shadow:var(--sh)}
+.acard-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.acard-title{font-size:14px;font-weight:500;color:var(--ink)}
 
-/* 場次管理卡片 */
-.ev-mgmt-card{background:var(--bos);border:1.5px solid var(--bo);border-radius:var(--rmd);padding:14px;margin-bottom:10px;position:relative}
-.ev-mgmt-title{font-weight:700;font-size:.88rem;margin-bottom:10px;display:flex;align-items:center;gap:7px}
-.ev-mgmt-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
-@media(max-width:480px){.ev-mgmt-grid{grid-template-columns:1fr}}
-.mg-inp{border:1.5px solid var(--bo);border-radius:6px;padding:6px 9px;font-size:.82rem;outline:none;background:var(--ca);transition:border-color .18s;width:100%}
-.mg-inp:focus{border-color:var(--or)}
-.mg-lbl{font-size:.68rem;font-weight:700;color:var(--sll);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:3px}
-.mgmt-item-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:var(--ca);border-radius:6px;padding:7px 8px;margin-bottom:5px}
-.mi-em{width:46px;text-align:center}
-.mi-rest{width:120px}
-.mi-name{flex:1;min-width:90px}
-.mi-price{width:64px}
+/* ── FORM INPUTS ── */
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
+.fg label{font-size:12px;font-weight:500;color:var(--ink2)}
+.req{color:var(--red)}
+.fg input,.fg textarea,.fg select{padding:9px 12px;font-size:13px;border:1.5px solid var(--line);border-radius:9px;background:var(--white);color:var(--ink);font-family:'Noto Sans TC',sans-serif;transition:all .15s;width:100%}
+.fg input:focus,.fg textarea:focus,.fg select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,168,.1)}
+.fg textarea{resize:vertical;line-height:1.6}
+.form-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+.form-4 .fg{margin-bottom:0}
+.form-2 .fg{margin-bottom:0}
 
-/* ── BTNS ── */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 16px;border-radius:var(--rsm);font-family:'Nunito',sans-serif;font-weight:800;font-size:.8rem;transition:all .18s}
-.btn-or{background:var(--or);color:#fff;box-shadow:0 2px 8px rgba(249,115,22,.3)}.btn-or:hover{background:var(--ord)}
-.btn-out{background:var(--ca);color:var(--slm);border:1.5px solid var(--bo)}.btn-out:hover{border-color:var(--sl);color:var(--sl)}
-.btn-rd{background:var(--rd);color:#fff}.btn-rd:hover{background:#b91c1c}
-.btn-gr{background:var(--gr);color:#fff}.btn-gr:hover{background:#15803d}
-.btn-sm{padding:4px 10px;font-size:.7rem}
-.btn-full{width:100%;padding:10px;font-size:.86rem}
+/* ── DATE ROWS (admin add activity) ── */
+.date-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.date-row{display:flex;gap:8px;align-items:center;background:var(--line2);border-radius:8px;padding:8px 10px}
+.date-row input{flex:1;padding:7px 10px;font-size:13px;border:1px solid var(--line);border-radius:7px;background:var(--white);color:var(--ink);font-family:'Noto Sans TC',sans-serif}
+.date-row input:focus{outline:none;border-color:var(--blue)}
+.date-row .del-btn{background:none;border:none;cursor:pointer;color:var(--ink3);padding:3px;border-radius:5px;flex-shrink:0}
+.date-row .del-btn:hover{color:var(--red);background:var(--red-lt)}
+.date-row .del-btn svg{width:14px;height:14px;display:block}
 
-/* ── MODAL ── */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;animation:fi .18s}
-.modal-box{background:var(--ca);border-radius:var(--rxl);padding:28px 24px;text-align:center;max-width:320px;width:100%;box-shadow:var(--shlg)}
-.modal-ico{font-size:2.2rem;margin-bottom:8px}
-.modal-title{font-family:'Nunito',sans-serif;font-weight:900;font-size:1.1rem;margin-bottom:4px}
-.modal-sub{font-size:.75rem;color:var(--sll);margin-bottom:16px}
-.modal-inp{width:100%;border:1.5px solid var(--bo);border-radius:var(--rsm);padding:10px;font-size:.95rem;text-align:center;letter-spacing:5px;outline:none;margin-bottom:11px;transition:border-color .18s}
-.modal-inp:focus{border-color:var(--or)}
+/* ── ADMIN ACT LIST ── */
+.adm-act{background:var(--white);border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px;box-shadow:var(--sh);overflow:hidden}
+.adm-act-hd{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.adm-act-title{font-size:14px;font-weight:500;color:var(--ink)}
+.adm-act-meta{font-size:12px;color:var(--ink3);margin-top:2px}
+.adm-act-body{display:none;border-top:1px solid var(--line2);padding:14px 18px;background:#fbfcff}
+.adm-act-body.on{display:block}
+.sess-stat-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;background:var(--line2);margin-bottom:6px}
+.sess-stat-row:last-child{margin-bottom:0}
+.ssr-d{font-size:13px;font-weight:500;color:var(--ink)}
+.ssr-t{font-size:11px;color:var(--ink3)}
+.ssr-cnt{font-size:13px;color:var(--blue);font-weight:500}
+
+/* ── STATS ── */
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.stat-box{background:var(--white);border:1px solid var(--line);border-radius:10px;padding:14px 18px;box-shadow:var(--sh)}
+.stat-box .sv{font-size:28px;font-weight:500;font-family:'Noto Serif TC',serif;color:var(--blue)}
+.stat-box .sl{font-size:11px;color:var(--ink3);margin-top:2px}
+
+/* ── REG TABLE ── */
+.reg-tabs{display:flex;gap:0;border-bottom:2px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.reg-tab{padding:8px 16px;font-size:13px;color:var(--ink3);background:none;border:none;cursor:pointer;font-family:'Noto Sans TC',sans-serif;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .14s;display:flex;align-items:center;gap:6px}
+.reg-tab:hover{color:var(--ink)}.reg-tab.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:500}
+.reg-tab .rc{background:var(--blue-lt);color:var(--blue);font-size:11px;font-weight:500;padding:1px 6px;border-radius:99px}
+.reg-tab.on .rc{background:var(--blue);color:#fff}
+.rtable{width:100%;border-collapse:collapse;font-size:13px}
+.rtable th{padding:8px 10px;text-align:left;font-size:11px;font-weight:500;color:var(--ink3);border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.04em}
+.rtable td{padding:10px 10px;border-bottom:1px solid var(--line2);vertical-align:middle}
+.rtable tr:last-child td{border-bottom:none}.rtable tr:hover td{background:var(--line2)}
+.av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0}
+
+/* ── DOC ── */
+.doc-out{background:var(--white);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-top:16px;display:none}
+.doc-hdr{background:var(--navy);padding:13px 20px;display:flex;align-items:center;justify-content:space-between}
+.doc-hdr-t{font-family:'Noto Serif TC',serif;font-size:14px;color:#fff;font-weight:500}
+.doc-badge{font-size:11px;background:rgba(255,255,255,.14);color:rgba(255,255,255,.8);padding:2px 9px;border-radius:99px;border:1px solid rgba(255,255,255,.18)}
+.doc-body{padding:24px 28px;font-size:13px;line-height:2.1;white-space:pre-wrap;font-family:'Noto Serif TC',serif;color:var(--ink);background:#fffef9;border-bottom:1px solid var(--line2)}
+.doc-actions{padding:12px 20px;display:flex;gap:8px;justify-content:flex-end}
+
+/* ── BUTTONS ── */
+.btn{padding:8px 18px;font-size:13px;border-radius:8px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;font-weight:500;transition:all .14s;border:1px solid transparent}
+.btn-p{background:linear-gradient(135deg,var(--blue),var(--navy2));color:#fff}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(37,99,168,.28)}
+.btn-g{background:var(--white);color:var(--ink2);border-color:var(--line)}
+.btn-g:hover{background:var(--line2)}
+.btn-full{width:100%;padding:12px;font-size:14px;border-radius:10px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;font-weight:500;transition:all .16s;border:none;background:linear-gradient(135deg,var(--blue),var(--navy2));color:#fff;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-full:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(37,99,168,.3)}
+.btn-full svg{width:15px;height:15px}
+.btn-danger{background:var(--white);color:var(--red);border-color:#f0b8b8}
+.btn-danger:hover{background:var(--red-lt)}
+.bdg{display:inline-block;font-size:11px;font-weight:500;padding:2px 9px;border-radius:99px}
+.bdg-blue{background:var(--blue-lt);color:var(--blue)}
+
+/* ── SPIN ── */
+.spin{width:16px;height:16px;border:2px solid #d0c8f8;border-top-color:var(--purple,#6d3fc5);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── TOAST ── */
-.toast-wrap{position:fixed;top:12px;right:12px;z-index:999;display:flex;flex-direction:column;gap:6px}
-.toast{background:var(--sl);color:#fff;border-radius:var(--rsm);padding:10px 14px;font-size:.8rem;font-weight:600;max-width:270px;display:flex;align-items:center;gap:7px;box-shadow:var(--shlg);animation:tin .23s ease,tout .3s ease 2.2s forwards}
-.toast.ok{background:var(--gr)}.toast.err{background:var(--rd)}.toast.warn{background:var(--am)}
-@keyframes tin{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
-@keyframes tout{to{transform:translateX(110%);opacity:0}}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--navy);color:#fff;padding:11px 22px;border-radius:99px;font-size:13px;font-weight:500;opacity:0;transition:all .22s;pointer-events:none;z-index:9999;white-space:nowrap}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* ── MISC ── */
-.divider{border:none;border-top:1px solid var(--bo);margin:12px 0}
-.fbe{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:7px}
-.empty{text-align:center;padding:38px 12px;color:var(--sll)}
-.empty .ei{font-size:2.8rem;display:block;margin-bottom:9px}
-.empty p{font-size:.82rem;font-weight:600}
-.tag{display:inline-block;font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:20px}
-.upload-zone{border:2px dashed var(--bo);border-radius:var(--rlg);padding:18px;text-align:center;cursor:pointer;background:var(--ca);transition:all .2s;position:relative;overflow:hidden}
-.upload-zone:hover{border-color:var(--in);background:var(--inl)}
-.upload-sub{font-size:.72rem;color:var(--sll);margin-top:4px}
-.scan-ldr{display:flex;align-items:center;justify-content:center;gap:9px;font-size:.82rem;font-weight:700;color:var(--ord);margin-top:8px}
-.spin{width:20px;height:20px;border:2.5px solid var(--orll);border-top-color:var(--or);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
-@keyframes spin{to{transform:rotate(360deg)}}
-.menu-preview-img{max-height:180px;border-radius:var(--rmd);margin:8px auto 0;object-fit:cover;display:block}
+.note-box{background:var(--gold-lt);border:1px solid #f0d5a0;border-radius:8px;padding:9px 13px;font-size:12px;color:var(--gold);margin-bottom:14px;line-height:1.6}
+.name-chip{padding:5px 14px;font-size:13px;font-weight:500;border:1.5px solid var(--blue-mid);border-radius:99px;background:var(--white);color:var(--blue);cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .15s}
+.name-chip:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.name-chip.selected{background:var(--blue);color:#fff;border-color:var(--blue)}
+.add-date-btn{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--blue);background:none;border:1px dashed var(--blue-mid);border-radius:7px;padding:6px 14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:all .14s;margin-top:4px}
+.add-date-btn:hover{background:var(--blue-lt)}
 </style>
-<script>
-  // 偵測部署環境，決定 proxy 路徑
-  // pages.dev 或自訂域名 → Cloudflare Pages
-  // netlify.app → Netlify
-  const host = window.location.hostname;
-  window._cfPages = host.includes('pages.dev') || (!host.includes('netlify') && !host.includes('localhost'));
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-<div class="toast-wrap" id="toastWrap"></div>
 
-<!-- Admin Modal -->
-<div class="modal-bg" id="adminModal" style="display:none">
-  <div class="modal-box">
-    <div class="modal-ico">🔐</div>
-    <div class="modal-title">管理後台</div>
-    <p class="modal-sub">請輸入管理員密碼</p>
-    <input type="password" class="modal-inp" id="adminPwInp" placeholder="••••" maxlength="20" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="btn btn-or btn-full" onclick="doLogin()">進入後台</button>
-    <button class="btn btn-out btn-full" style="margin-top:7px" onclick="closeLogin()">取消</button>
+<!-- ══ PUBLIC SITE ══ -->
+<header class="pub-hdr">
+  <div class="pub-brand">弘光資教研習報名系統</div>
+  <button class="pub-admin-btn" onclick="openLoginModal()">管理員登入</button>
+</header>
+
+<div class="pub-inner">
+  <div class="pub-hero">
+    <h2>歡迎報名研習活動</h2>
+    <p>請選擇有興趣的場次點選報名</p>
+  </div>
+  <div id="pub-empty" class="pub-empty">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <h3>目前尚無開放報名的活動</h3>
+    <p>請稍後再來，或洽詢辦公室同仁</p>
+  </div>
+  <div class="act-list" id="pub-act-list" style="display:none"></div>
+</div>
+
+<!-- ══ OVERLAYS ══ -->
+
+<!-- 設定 -->
+<div class="overlay" id="setup-overlay">
+  <div class="modal">
+    <div class="modal-title">首次設定</div>
+    <div class="modal-sub">設定 Supabase 雲端資料庫與後台管理密碼</div>
+    <div class="fg"><label>Supabase Project URL</label><input id="cfg-url" placeholder="https://xxxxxxxx.supabase.co"/></div>
+    <div class="fg"><label>Supabase anon key</label><input id="cfg-key" placeholder="eyJhbGciOi..."/></div>
+    <div class="fg"><label>後台管理密碼（自訂）</label><input type="password" id="cfg-pass" placeholder="設定一組只有您知道的密碼"/></div>
+    <div class="merr" id="cfg-err">請填寫所有欄位</div>
+    <button class="btn-full" onclick="saveSetup()">儲存並開始使用</button>
+    <div style="font-size:12px;color:var(--ink3);text-align:center;margin-top:14px;line-height:1.7">
+      Supabase 免費方案即可使用<br>
+      前往 <a href="https://supabase.com" target="_blank" style="color:var(--blue)">supabase.com</a> 建立帳號與專案
+    </div>
   </div>
 </div>
 
-<!-- Spec Sheet -->
-<div class="overlay" id="specOverlay" style="display:none" onclick="if(event.target===this)closeSpec()">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-title" id="sheetTitle"></div>
-    <div id="sheetBody"></div>
-    <button class="btn btn-or btn-full" style="margin-top:12px" onclick="confirmSpec()">加入清單</button>
+<!-- 管理員登入 -->
+<div class="overlay" id="login-overlay">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-title">管理員登入</div>
+    <div class="modal-sub">輸入管理密碼進入後台</div>
+    <div class="fg"><label>管理密碼</label><input type="password" id="login-pass" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <div class="merr" id="login-err">密碼不正確</div>
+    <button class="btn-full" onclick="doLogin()">進入後台</button>
+    <div style="text-align:center;margin-top:12px">
+      <button class="btn btn-g" onclick="closeOverlay('login-overlay')" style="font-size:12px">取消</button>
+    </div>
   </div>
 </div>
 
-<!-- Combo Sheet -->
-<div class="overlay" id="comboOverlay" style="display:none" onclick="if(event.target===this)closeCombo()">
-  <div class="sheet" style="max-height:85vh">
-    <div class="sheet-handle"></div>
-    <div id="comboSheetContent"></div>
+<!-- 報名 -->
+<div class="overlay" id="reg-overlay">
+  <div class="modal" style="max-width:400px">
+    <div id="reg-form-view">
+      <div class="modal-title">填寫報名資料</div>
+      <div class="reg-info-box">
+        <div class="reg-info-act" id="reg-act-name"></div>
+        <div class="reg-info-sess" id="reg-sess-info"></div>
+      </div>
+      <div class="fg">
+        <label>您的姓名 <span class="req">*</span></label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">
+          <span style="font-size:11px;color:var(--ink3);width:100%;margin-bottom:2px">快捷選擇：</span>
+          <button type="button" onclick="pickName('林雨欣')" class="name-chip">林雨欣</button>
+          <button type="button" onclick="pickName('陳微姍')" class="name-chip">陳微姍</button>
+          <button type="button" onclick="pickName('廖梅青')" class="name-chip">廖梅青</button>
+          <button type="button" onclick="pickName('劉曉臻')" class="name-chip">劉曉臻</button>
+          <button type="button" onclick="pickName('賴心榆')" class="name-chip">賴心榆</button>
+          <button type="button" onclick="pickName('施望謙')" class="name-chip">施望謙</button>
+        </div>
+        <input id="reg-name" placeholder="或直接輸入姓名" onkeydown="if(event.key==='Enter')submitReg()"/>
+      </div>
+      <div id="reg-saving" style="display:none;align-items:center;gap:8px;font-size:13px;color:#6d3fc5;margin-bottom:12px">
+        <div class="spin"></div>送出中，請稍候…
+      </div>
+      <button class="btn-full" onclick="submitReg()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        確認報名
+      </button>
+      <div style="text-align:center;margin-top:12px">
+        <button class="btn btn-g" onclick="closeOverlay('reg-overlay')" style="font-size:12px">取消</button>
+      </div>
+    </div>
+    <div id="reg-success-view" style="display:none">
+      <div class="success-screen">
+        <div class="success-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3>系統報名成功！</h3>
+        <p id="success-msg"></p>
+        <div id="spe-link-box"></div>
+        <button class="btn btn-g" onclick="closeOverlay('reg-overlay');renderPublic()" style="margin-top:16px">關閉</button>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- TOPBAR -->
-<div class="topbar">
-  <div class="topbar-inner">
-    <div class="brand"><div class="brand-icon">🍱</div>同仁點餐</div>
-    
+<!-- ══ ADMIN ══ -->
+<div class="adm-overlay" id="adm-overlay">
+  <div class="adm-hdr">
+    <div class="adm-hdr-title">研習活動 — 管理後台</div>
+    <button class="adm-close" onclick="closeAdmin()">← 返回報名頁面</button>
+  </div>
+  <div class="adm-tabs">
+    <button class="adm-tab on" id="at-acts" onclick="admTab('acts')">新增活動</button>
+    <button class="adm-tab" id="at-regs" onclick="admTab('regs')">報名名單</button>
+    <button class="adm-tab" id="at-doc" onclick="admTab('doc')">產生回文公文</button>
+    <button class="adm-tab" id="at-hist" onclick="admTab('hist')">參加記錄</button>
+  </div>
+  <div class="adm-body">
+  <div class="adm-inner">
+
+    <!-- 新增活動 -->
+    <div id="adm-acts">
+
+      <!-- AI 輔助填表區塊 -->
+      <div class="acard" style="border-color:var(--blue-mid);background:linear-gradient(135deg,#f0f5ff,#f8faff)">
+        <div class="acard-hd" style="margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:32px;height:32px;border-radius:8px;background:var(--blue-lt);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <div class="acard-title" style="margin-bottom:0">AI 輔助填表</div>
+              <div style="font-size:11px;color:var(--ink3);margin-top:1px">用 Claude / ChatGPT 整理 PDF 後，貼上文字自動填入欄位</div>
+            </div>
+          </div>
+          <button class="btn btn-g" style="font-size:11px;padding:4px 10px" onclick="toggleAiHelp()">使用說明</button>
+        </div>
+
+        <!-- 使用說明（預設收合） -->
+        <div id="ai-help-box" style="display:none;background:var(--white);border:1px solid var(--blue-mid);border-radius:9px;padding:14px 16px;margin-bottom:14px;font-size:12px;color:var(--ink2);line-height:1.8">
+          <div style="font-weight:500;color:var(--blue);margin-bottom:8px">📋 操作步驟</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div><span style="background:var(--blue);color:#fff;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;margin-right:6px">1</span>打開 <strong>claude.ai</strong>（或 ChatGPT），上傳 PDF 公文</div>
+            <div><span style="background:var(--blue);color:#fff;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;margin-right:6px">2</span>貼上以下提示詞，請 AI 整理：</div>
+          </div>
+          <div style="background:#f0f2f8;border-radius:7px;padding:10px 13px;margin:10px 0;font-family:monospace;font-size:11px;line-height:1.9;color:var(--ink);position:relative">
+活動名稱：
+主辦機關：
+活動地點：
+研習時數：（如3小時）
+摘要描述：（完整條列研習內容、講師、注意事項等，每點一行）
+標籤：（用逗號分隔，如：研習時數3hr,午餐提供）
+場次：（每場一行，格式：日期|時段，如：113/05/14（二）|09:00–12:00）
+            <button onclick="copyPrompt()" style="position:absolute;top:6px;right:6px;font-size:11px;padding:3px 9px;background:var(--blue);color:#fff;border:none;border-radius:5px;cursor:pointer;font-family:'Noto Sans TC',sans-serif">複製</button>
+          </div>
+          <div><span style="background:var(--blue);color:#fff;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;margin-right:6px">3</span>把 AI 回覆的文字貼入下方，點「自動填入欄位」</div>
+        </div>
+
+        <div class="fg" style="margin-bottom:10px">
+          <label>貼上 AI 整理的文字</label>
+          <textarea id="ai-paste" rows="8" placeholder="貼上 Claude 或 ChatGPT 整理好的文字到這裡…
+
+範例格式：
+活動名稱：115年度特殊教育研習
+主辦機關：國立臺南大學特殊教育中心
+活動地點：臺南市中西區樹林街二段33號啟明苑2樓204教室
+研習時數：3小時
+摘要描述：
+協助輔導員有效解讀臨床心理衡鑑報告，將醫療診斷轉化為具體的教育需求分析。
+透過實務拆解，精確辨識個案核心限制，提升個別化支持計畫實質效益。
+研習當天備有午餐，請自備環保杯、環保筷。
+場次：
+115/07/09（四）|13:10–16:20" style="font-size:12px;line-height:1.7"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-p" style="display:flex;align-items:center;gap:7px" onclick="parseAndFill()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke-linecap="round"/></svg>
+            自動填入欄位
+          </button>
+          <button class="btn btn-g" onclick="document.getElementById('ai-paste').value=''">清除</button>
+          <span id="parse-result" style="font-size:12px;color:var(--green);display:none">✓ 已填入，請確認後發布</span>
+          <span id="parse-err" style="font-size:12px;color:var(--red);display:none"></span>
+        </div>
+      </div>
+
+      <div class="acard">
+        <div class="acard-hd">
+          <div class="acard-title">新增研習活動</div>
+        </div>
+        <div class="note-box">確認 AI 自動填入的資料，或自行手動填寫，完成後按「發布活動」。</div>
+        <div class="form-2">
+          <div class="fg"><label>活動名稱 <span class="req">*</span></label><input id="act-name" placeholder="例：113年度特殊教育研習"/></div>
+          <div class="fg"><label>主辦機關 <span class="req">*</span></label><input id="act-org" placeholder="例：國立臺南大學特殊教育中心"/></div>
+        </div>
+        <div class="form-2">
+          <div class="fg"><label>活動地點</label><input id="act-place" placeholder="例：臺南市政府大樓 B1"/></div>
+          <div class="fg"><label>研習時數</label><input id="act-hours" placeholder="例：3小時"/></div>
+        </div>
+        <div class="form-2">
+          <div class="fg"><label>講師姓名</label><input id="act-speaker" placeholder="例：丘彥南醫師"/></div>
+          <div class="fg"><label>講師職稱／服務單位</label><input id="act-speaker-title" placeholder="例：臺大醫院精神醫學部特聘兼任主治醫師"/></div>
+        </div>
+        <!-- 保留但隱藏，供公文產生用 -->
+        <input id="act-ref" type="hidden"/>
+        <input id="act-deadline" type="hidden"/>
+        <div class="fg">
+          <label>活動摘要描述（每行一項，可包含研習內容、注意事項、研習日程等）</label>
+          <textarea id="act-pts" rows="8" placeholder="例：&#10;協助輔導員有效解讀臨床心理衡鑑報告，將醫療診斷轉化為具體的教育需求分析。&#10;研習備有午餐，請自備環保杯。&#10;【研習日程】&#10;09:00–10:30　課程一名稱&#10;10:30–10:40　休息&#10;10:40–12:10　課程二名稱&#10;12:10　　　　賦歸"></textarea>
+        </div>
+        <div class="fg">
+          <label>標籤（用逗號分隔）</label>
+          <input id="act-tags" placeholder="例：研習時數3hr, 午餐提供, 特教教師"/>
+        </div>
+        <div class="fg">
+          <label>特殊教育資訊網報名連結（報名成功後顯示給使用者）</label>
+          <input id="act-speurl" placeholder="https://sencir.spc.ntnu.edu.tw/（留空則顯示預設首頁）"/>
+        </div>
+
+        <div class="fg">
+          <label>開放場次 <span class="req">*</span>（每行一筆；地點留空則使用活動主地點）</label>
+          <div class="date-rows" id="date-rows">
+            <div class="date-row" style="flex-wrap:wrap;gap:6px">
+              <input class="dr-d" placeholder="日期 例：113/05/14（二）" style="flex:1.5;min-width:140px"/>
+              <input class="dr-t" placeholder="時段 例：09:00–12:00" style="flex:1;min-width:100px"/>
+              <input class="dr-p" placeholder="場次地點（選填）" style="flex:2;min-width:160px"/>
+              <button class="del-btn" onclick="removeDateRow(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
+          </div>
+          <button class="add-date-btn" onclick="addDateRow()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            新增場次
+          </button>
+        </div>
+
+        <div style="text-align:right;margin-top:4px">
+          <button class="btn btn-p" onclick="addActivity()">發布活動到報名頁面</button>
+        </div>
+      </div>
+
+      <div class="acard">
+        <div class="acard-hd">
+          <div class="acard-title">已發布的活動</div>
+          <button class="btn btn-danger" style="font-size:12px;padding:4px 10px" onclick="clearAllActs()">清除全部</button>
+        </div>
+        <div id="adm-act-list">
+          <div style="text-align:center;padding:24px;color:var(--ink3);font-size:13px">尚無活動</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 報名名單 -->
+    <div id="adm-regs" style="display:none">
+      <div class="stat-row">
+        <div class="stat-box"><div class="sv" id="st-total">0</div><div class="sl">總報名人數</div></div>
+        <div class="stat-box"><div class="sv" id="st-acts">0</div><div class="sl">活動數量</div></div>
+        <div class="stat-box"><div class="sv" id="st-sess">0</div><div class="sl">場次數量</div></div>
+      </div>
+      <div class="acard">
+        <div class="acard-hd">
+          <div class="acard-title">報名名單</div>
+          <button class="btn btn-g" style="font-size:12px;padding:5px 12px;display:flex;align-items:center;gap:5px" onclick="refreshRegs()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            重新整理
+          </button>
+        </div>
+        <div class="reg-tabs" id="reg-tabs"></div>
+        <div id="reg-table-wrap">
+          <div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">尚無報名資料</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 回文公文 -->
+    <div id="adm-doc" style="display:none">
+      <div class="acard">
+        <div class="acard-hd"><div class="acard-title">產生回文公文</div></div>
+
+        <div class="note-box" style="background:var(--blue-lt);border-color:var(--blue-mid);color:var(--blue)">
+          選擇活動後，系統會自動產生「有人參加」或「無人參加」的公文格式，請依實際情況選擇。
+        </div>
+
+        <div class="fg"><label>選擇活動</label>
+          <select id="doc-act" onchange="updateDocSess()" style="padding:9px 12px;font-size:13px;border:1.5px solid var(--line);border-radius:9px;background:var(--white);color:var(--ink);font-family:'Noto Sans TC',sans-serif;width:100%">
+            <option value="">請選擇活動</option>
+          </select>
+        </div>
+        <div class="fg"><label>場次篩選</label>
+          <select id="doc-sess" style="padding:9px 12px;font-size:13px;border:1.5px solid var(--line);border-radius:9px;background:var(--white);color:var(--ink);font-family:'Noto Sans TC',sans-serif;width:100%">
+            <option value="">全部場次</option>
+          </select>
+        </div>
+        <div class="form-4" style="margin-top:4px">
+          <div class="fg"><label>發文機關全銜 <span class="req">*</span></label><input id="doc-org" placeholder="弘光科技大學"/></div>
+          <div class="fg"><label>承辦人姓名</label><input id="doc-person" placeholder="王小明"/></div>
+          <div class="fg"><label>承辦人職稱</label><input id="doc-jobtitle" placeholder="業務承辦人"/></div>
+          <div class="fg"><label>聯絡電話</label><input id="doc-tel" placeholder="04-XXXXXXXX"/></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap">
+          <button class="btn btn-p" onclick="genDoc('attend')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            有人參加 — 產生報名公文
+          </button>
+          <button class="btn btn-g" onclick="genDoc('decline')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            無人參加 — 產生致謝不派員公文
+          </button>
+        </div>
+        <div class="doc-out" id="doc-out">
+          <div class="doc-hdr">
+            <div class="doc-hdr-t" id="doc-out-title">回文公文草稿</div>
+            <div class="doc-badge" id="doc-out-badge"></div>
+          </div>
+          <div class="doc-body" id="doc-out-body"></div>
+          <div class="doc-actions">
+            <button class="btn btn-g" onclick="cpDoc()">複製全文</button>
+            <button class="btn btn-p" onclick="cpDoc(true)">複製 → 貼入公文系統</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 參加記錄 -->
+    <div id="adm-hist" style="display:none">
+      <div class="acard">
+        <div class="acard-hd" style="margin-bottom:16px">
+          <div>
+            <div class="acard-title">過往參加研習記錄</div>
+            <div style="font-size:12px;color:var(--ink3);margin-top:2px">依活動顯示所有曾報名的人員記錄</div>
+          </div>
+          <button class="btn btn-p" id="hist-export-btn" style="font-size:12px;padding:6px 14px;display:none;align-items:center;gap:6px" onclick="exportHistExcel()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            匯出 Excel
+          </button>
+        </div>
+        <div id="hist-wrap"></div>
+      </div>
+    </div>
+
+  </div>
   </div>
 </div>
 
-<!-- TABS -->
-<div class="tab-bar">
-  <div class="tab-bar-inner">
-    <button class="tab-btn on" id="tab-home" onclick="goTab('home')">🏠 場次列表</button>
-    <button class="tab-btn" id="tab-menu" onclick="goTab('menu')">📋 菜單上傳和點餐</button>
-    <button class="tab-btn" id="tab-admin" onclick="goTab('admin')">⚙️ 後台</button>
-  </div>
-</div>
-
-<div class="main" id="main"></div>
-<div class="sub-bar" id="subBar" style="display:none">
-  <div class="sub-bar-inner">
-    <button class="sub-btn" id="subBtn" onclick="submitOrder()">✅ 送出點餐意向</button>
-  </div>
-</div>
+<div class="toast" id="toast"></div>
 
 <script>
-/* ═══ CONFIG ═══ */
-const SUPABASE_URL  = 'https://mzwdujssjexrcjzzdnyu.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16d2R1anNzamV4cmNqenpkbnl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNDA1MTMsImV4cCI6MjA5NDcxNjUxM30.BmCw2pE5PRMkyJ5qJUiRLHxkeWzkgJCBoDhvzFUseFc';
-const CLAUDE_KEY    = '';  // Key 已移至 Netlify 環境變數
-
-const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
-const DEMO = SUPABASE_URL.includes('YOUR_PROJECT');
-
-/* ═══════════════════════════════════════════
-   資料庫 SQL（Supabase SQL Editor 執行）
-
-原本四張表 menus / menu_items / orders / order_items 維持不變。
-
-menus 表 = 每一個「場次」，加入承辦人欄位：
-ALTER TABLE menus ADD COLUMN organizer text DEFAULT '';
-ALTER TABLE menus ADD COLUMN store_name text DEFAULT '';
-
-其他沒有變動，現有資料完全相容。
-═══════════════════════════════════════════ */
-
-
-// ══════════════════════════════════════
-// 速食預設菜單（內建）
-// 資料來源：各品牌台灣官網 2026年5月
-// ══════════════════════════════════════
-const PRESET_MENUS = [
-  {
-    store: '麥當勞',
-    savedAt: '內建菜單',
-    items: [
-      // 主餐
-      {id:'mc1',restaurant:'麥當勞',category:'便當',emoji:'🍔',name:'大麥克',description:'雙層牛肉+生菜+特製醬',price:99,specs:[],sort_order:0,ai_parsed:false},
-      {id:'mc2',restaurant:'麥當勞',category:'便當',emoji:'🍔',name:'雙層牛肉吉事堡',description:'雙層牛肉+起司',price:89,specs:[],sort_order:1,ai_parsed:false},
-      {id:'mc3',restaurant:'麥當勞',category:'便當',emoji:'🍗',name:'勁辣雞腿堡',description:'香脆辣味雞腿',price:99,specs:[],sort_order:2,ai_parsed:false},
-      {id:'mc4',restaurant:'麥當勞',category:'便當',emoji:'🍗',name:'麥辣雞腿堡',description:'香脆雞腿排',price:89,specs:[],sort_order:3,ai_parsed:false},
-      {id:'mc5',restaurant:'麥當勞',category:'便當',emoji:'🐟',name:'麥香魚',description:'酥炸魚排+塔塔醬',price:69,specs:[],sort_order:4,ai_parsed:false},
-      {id:'mc6',restaurant:'麥當勞',category:'便當',emoji:'🍗',name:'麥脆雞腿（單件）',description:'現點現炸香脆雞腿',price:79,specs:[],sort_order:5,ai_parsed:false},
-      {id:'mc7',restaurant:'麥當勞',category:'便當',emoji:'🥗',name:'蔬菜麥香魚',description:'炸魚排+生菜',price:79,specs:[],sort_order:6,ai_parsed:false},
-      // 配餐
-      {id:'mc8',restaurant:'麥當勞',category:'點心',emoji:'🍟',name:'大薯',description:'',price:59,specs:[],sort_order:7,ai_parsed:false},
-      {id:'mc9',restaurant:'麥當勞',category:'點心',emoji:'🍟',name:'中薯',description:'',price:49,specs:[],sort_order:8,ai_parsed:false},
-      {id:'mc10',restaurant:'麥當勞',category:'點心',emoji:'🍗',name:'麥克雞塊 6塊',description:'',price:79,specs:[{cat:'沾醬',opts:['蜂蜜芥末','BBQ醬','番茄醬']}],sort_order:9,ai_parsed:false},
-      {id:'mc11',restaurant:'麥當勞',category:'點心',emoji:'🍗',name:'麥克雞塊 10塊',description:'',price:119,specs:[{cat:'沾醬',opts:['蜂蜜芥末','BBQ醬','番茄醬']}],sort_order:10,ai_parsed:false},
-      {id:'mc12',restaurant:'麥當勞',category:'點心',emoji:'🥧',name:'蘋果派',description:'',price:29,specs:[],sort_order:11,ai_parsed:false},
-      {id:'mc13',restaurant:'麥當勞',category:'點心',emoji:'🍦',name:'甜筒',description:'',price:15,specs:[{cat:'口味',opts:['香草','巧克力']}],sort_order:12,ai_parsed:false},
-      {id:'mc14',restaurant:'麥當勞',category:'點心',emoji:'🍦',name:'聖代',description:'',price:39,specs:[{cat:'口味',opts:['草莓','巧克力','焦糖']}],sort_order:13,ai_parsed:false},
-      // 飲料
-      {id:'mc15',restaurant:'麥當勞',category:'飲料',emoji:'🥤',name:'可口可樂',description:'',price:45,specs:[{cat:'杯型',opts:['中杯','大杯']},{cat:'冰量',opts:['正常冰','少冰','去冰']}],sort_order:14,ai_parsed:false},
-      {id:'mc17',restaurant:'麥當勞',category:'飲料',emoji:'🟡',name:'柳橙汁',description:'',price:49,specs:[{cat:'杯型',opts:['中杯','大杯']}],sort_order:16,ai_parsed:false},
-      {id:'mc18',restaurant:'麥當勞',category:'飲料',emoji:'☕',name:'美式咖啡',description:'',price:45,specs:[{cat:'杯型',opts:['中杯','大杯']},{cat:'冰熱',opts:['熱','冰']}],sort_order:17,ai_parsed:false},
-      {id:'mc19',restaurant:'麥當勞',category:'飲料',emoji:'🧋',name:'焦糖奶茶',description:'',price:59,specs:[{cat:'杯型',opts:['中杯','大杯']},{cat:'冰量',opts:['正常冰','少冰','去冰']}],sort_order:18,ai_parsed:false},
-      {id:'mc20',restaurant:'麥當勞',category:'飲料',emoji:'🥛',name:'麥香奶茶',description:'',price:45,specs:[{cat:'杯型',opts:['中杯','大杯']},{cat:'冰量',opts:['正常冰','少冰','去冰']}],sort_order:19,ai_parsed:false},
-      {id:'mc21',restaurant:'麥當勞',category:'飲料',emoji:'🍓',name:'草莓奶昔',description:'限定門市供應',price:69,specs:[{cat:'杯型',opts:['中杯','大杯']}],sort_order:20,ai_parsed:false},
-      {id:'mc22',restaurant:'麥當勞',category:'飲料',emoji:'🍦',name:'香草奶昔',description:'限定門市供應',price:69,specs:[{cat:'杯型',opts:['中杯','大杯']}],sort_order:21,ai_parsed:false},
-    ]
-  },
-  {
-    store: '肯德基',
-    savedAt: '內建菜單',
-    items: [
-      // 主餐
-      {id:'kfc1',restaurant:'肯德基',category:'便當',emoji:'🍗',name:'咔啦雞腿堡',description:'酥脆雞腿+特製醬',price:89,specs:[],sort_order:0,ai_parsed:false},
-      {id:'kfc2',restaurant:'肯德基',category:'便當',emoji:'🍗',name:'青花椒香麻脆雞腿堡',description:'台灣限定麻辣風味',price:99,specs:[],sort_order:1,ai_parsed:false},
-      {id:'kfc3',restaurant:'肯德基',category:'便當',emoji:'🍗',name:'原味咔啦脆雞（1塊）',description:'11種香料炸雞',price:69,specs:[{cat:'部位',opts:['雞腿','雞翅','雞胸','雞翅小腿']}],sort_order:2,ai_parsed:false},
-      {id:'kfc4',restaurant:'肯德基',category:'便當',emoji:'🌶',name:'青花椒香麻脆雞（1塊）',description:'台灣限定麻辣炸雞',price:69,specs:[],sort_order:3,ai_parsed:false},
-      {id:'kfc5',restaurant:'肯德基',category:'便當',emoji:'🍗',name:'爆脆無骨雞腿霸',description:'無骨大雞腿酥脆版',price:89,specs:[],sort_order:4,ai_parsed:false},
-      {id:'kfc6',restaurant:'肯德基',category:'便當',emoji:'🍱',name:'雞汁飯（咔啦雞腿）',description:'炸雞腿+白飯',price:129,specs:[],sort_order:5,ai_parsed:false},
-      {id:'kfc7',restaurant:'肯德基',category:'便當',emoji:'🍱',name:'雞汁飯（青花椒香麻）',description:'麻辣炸雞+白飯',price:139,specs:[],sort_order:6,ai_parsed:false},
-      // 配餐
-      {id:'kfc8',restaurant:'肯德基',category:'點心',emoji:'🥧',name:'原味蛋撻（1個）',description:'葡式蛋撻',price:35,specs:[],sort_order:7,ai_parsed:false},
-      {id:'kfc9',restaurant:'肯德基',category:'點心',emoji:'🥧',name:'奇巧可可流心蛋撻（1個）',description:'KitKat聯名限定',price:55,specs:[],sort_order:8,ai_parsed:false},
-      {id:'kfc10',restaurant:'肯德基',category:'點心',emoji:'🍟',name:'香酥脆薯（小）',description:'',price:39,specs:[],sort_order:9,ai_parsed:false},
-      {id:'kfc11',restaurant:'肯德基',category:'點心',emoji:'🍟',name:'香酥脆薯',description:'',price:59,specs:[],sort_order:10,ai_parsed:false},
-      {id:'kfc12',restaurant:'肯德基',category:'點心',emoji:'🌽',name:'黃金玉米',description:'台灣門市限定',price:39,specs:[],sort_order:11,ai_parsed:false},
-      {id:'kfc13',restaurant:'肯德基',category:'點心',emoji:'🥗',name:'田園沙拉',description:'',price:55,specs:[],sort_order:12,ai_parsed:false},
-      // 飲料
-      {id:'kfc14',restaurant:'肯德基',category:'飲料',emoji:'🥤',name:'可樂',description:'',price:45,specs:[{cat:'杯型',opts:['中杯','大杯']},{cat:'冰量',opts:['正常冰','少冰','去冰']}],sort_order:13,ai_parsed:false},
-      {id:'kfc15',restaurant:'肯德基',category:'飲料',emoji:'🍵',name:'立頓檸檬紅茶',description:'',price:39,specs:[{cat:'杯型',opts:['中杯','大杯']},{cat:'冰量',opts:['正常冰','少冰','去冰']}],sort_order:14,ai_parsed:false},
-      {id:'kfc16',restaurant:'肯德基',category:'飲料',emoji:'🍵',name:'冰無糖綠茶',description:'',price:35,specs:[{cat:'杯型',opts:['中杯','大杯']}],sort_order:15,ai_parsed:false},
-      {id:'kfc17',restaurant:'肯德基',category:'飲料',emoji:'☕',name:'美式咖啡',description:'',price:39,specs:[{cat:'杯型',opts:['中杯','大杯']},{cat:'冰熱',opts:['熱','冰']}],sort_order:16,ai_parsed:false},
-      {id:'kfc18',restaurant:'肯德基',category:'飲料',emoji:'🥤',name:'雪碧',description:'',price:45,specs:[{cat:'杯型',opts:['中杯','大杯']},{cat:'冰量',opts:['正常冰','少冰','去冰']}],sort_order:17,ai_parsed:false},
-    ]
-  },
-  {
-    store: '摩斯漢堡',
-    savedAt: '內建菜單',
-    items: [
-      // 主餐（台灣限定米漢堡系列為主）
-      {id:'mos1',restaurant:'摩斯漢堡',category:'便當',emoji:'🍙',name:'超級大麥元氣牛肉珍珠堡',description:'台灣米漢堡×牛肉',price:115,specs:[],sort_order:0,ai_parsed:false},
-      {id:'mos2',restaurant:'摩斯漢堡',category:'便當',emoji:'🍙',name:'超級大麥元氣豬排珍珠堡',description:'台灣米漢堡×豬排',price:99,specs:[],sort_order:1,ai_parsed:false},
-      {id:'mos3',restaurant:'摩斯漢堡',category:'便當',emoji:'🍙',name:'辣味燒肉珍珠堡',description:'台灣米漢堡×辣味燒肉',price:105,specs:[],sort_order:2,ai_parsed:false},
-      {id:'mos4',restaurant:'摩斯漢堡',category:'便當',emoji:'🍤',name:'炸蝦堡',description:'酥炸蝦排+塔塔醬',price:109,specs:[],sort_order:3,ai_parsed:false},
-      {id:'mos5',restaurant:'摩斯漢堡',category:'便當',emoji:'🥬',name:'摘鮮綠炸蝦堡',description:'生菜包炸蝦（無麵包）',price:119,specs:[],sort_order:4,ai_parsed:false},
-      {id:'mos6',restaurant:'摩斯漢堡',category:'便當',emoji:'🍔',name:'豬排堡',description:'香煎豬排漢堡',price:85,specs:[],sort_order:5,ai_parsed:false},
-      {id:'mos7',restaurant:'摩斯漢堡',category:'便當',emoji:'🐟',name:'鱈魚堡',description:'酥炸鱈魚+塔塔醬',price:85,specs:[],sort_order:6,ai_parsed:false},
-      {id:'mos8',restaurant:'摩斯漢堡',category:'便當',emoji:'🍙',name:'極上天丼珍珠堡',description:'台灣限定新品',price:125,specs:[],sort_order:7,ai_parsed:false},
-      // 配餐
-      {id:'mos9',restaurant:'摩斯漢堡',category:'點心',emoji:'🥔',name:'方塊薯餅',description:'',price:39,specs:[],sort_order:8,ai_parsed:false},
-      {id:'mos10',restaurant:'摩斯漢堡',category:'點心',emoji:'🥐',name:'北海道可樂餅',description:'',price:49,specs:[],sort_order:9,ai_parsed:false},
-      {id:'mos11',restaurant:'摩斯漢堡',category:'點心',emoji:'🍵',name:'抹茶紅豆米派',description:'台灣限定',price:45,specs:[],sort_order:10,ai_parsed:false},
-      {id:'mos12',restaurant:'摩斯漢堡',category:'點心',emoji:'🍟',name:'月亮薯條',description:'',price:55,specs:[],sort_order:11,ai_parsed:false},
-      {id:'mos13',restaurant:'摩斯漢堡',category:'點心',emoji:'🍮',name:'焦糖布丁',description:'',price:49,specs:[],sort_order:12,ai_parsed:false},
-      // 飲料
-      {id:'mos14',restaurant:'摩斯漢堡',category:'飲料',emoji:'🍵',name:'冰紅茶',description:'',price:39,specs:[{cat:'杯型',opts:['中杯','大杯']}],sort_order:13,ai_parsed:false},
-      {id:'mos15',restaurant:'摩斯漢堡',category:'飲料',emoji:'🍵',name:'台灣冰綠茶',description:'台灣限定',price:39,specs:[{cat:'杯型',opts:['中杯','大杯']}],sort_order:14,ai_parsed:false},
-      {id:'mos16',restaurant:'摩斯漢堡',category:'飲料',emoji:'🧋',name:'蒟蒻冰茶',description:'',price:55,specs:[{cat:'杯型',opts:['中杯','大杯']}],sort_order:15,ai_parsed:false},
-      {id:'mos17',restaurant:'摩斯漢堡',category:'飲料',emoji:'🧃',name:'紅心芭樂蒟蒻冰茶',description:'台灣限定季節新品',price:65,specs:[{cat:'杯型',opts:['中杯','大杯']}],sort_order:16,ai_parsed:false},
-      {id:'mos18',restaurant:'摩斯漢堡',category:'飲料',emoji:'☕',name:'摩斯咖啡',description:'',price:60,specs:[{cat:'杯型',opts:['中杯','大杯']},{cat:'冰熱',opts:['熱','冰']}],sort_order:17,ai_parsed:false},
-      {id:'mos19',restaurant:'摩斯漢堡',category:'飲料',emoji:'☕',name:'拿鐵咖啡',description:'',price:79,specs:[{cat:'杯型',opts:['中杯','大杯']},{cat:'冰熱',opts:['熱','冰']}],sort_order:18,ai_parsed:false},
-      {id:'mos20',restaurant:'摩斯漢堡',category:'飲料',emoji:'🥤',name:'可樂',description:'',price:39,specs:[{cat:'杯型',opts:['中杯','大杯']}],sort_order:19,ai_parsed:false},
-    ]
-  },
-  {
-    store: '漢堡王',
-    savedAt: '內建菜單',
-    items: [
-      // 主餐（以台灣常態菜單為主）
-      {id:'bk1',restaurant:'漢堡王',category:'便當',emoji:'🍔',name:'華堡',description:'火烤牛肉+生菜+蕃茄',price:119,specs:[],sort_order:0,ai_parsed:false},
-      {id:'bk2',restaurant:'漢堡王',category:'便當',emoji:'🍔',name:'雙層華堡',description:'雙層火烤牛肉',price:149,specs:[],sort_order:1,ai_parsed:false},
-      {id:'bk3',restaurant:'漢堡王',category:'便當',emoji:'🍔',name:'安格斯牛肉堡',description:'厚切安格斯牛肉',price:139,specs:[],sort_order:2,ai_parsed:false},
-      {id:'bk4',restaurant:'漢堡王',category:'便當',emoji:'🍗',name:'國王大雞堡',description:'酥脆大雞排',price:109,specs:[],sort_order:3,ai_parsed:false},
-      {id:'bk5',restaurant:'漢堡王',category:'便當',emoji:'🍗',name:'咔啦雞腿堡',description:'香脆雞腿排',price:109,specs:[],sort_order:4,ai_parsed:false},
-      {id:'bk6',restaurant:'漢堡王',category:'便當',emoji:'🐟',name:'華鱈魚堡',description:'酥炸鱈魚排',price:99,specs:[],sort_order:5,ai_parsed:false},
-      {id:'bk7',restaurant:'漢堡王',category:'便當',emoji:'🌭',name:'捲捲德腸堡',description:'德式香腸捲餅',price:89,specs:[],sort_order:6,ai_parsed:false},
-      {id:'bk8',restaurant:'漢堡王',category:'便當',emoji:'🍔',name:'小華堡',description:'經典牛肉堡',price:79,specs:[],sort_order:7,ai_parsed:false},
-      {id:'bk9',restaurant:'漢堡王',category:'便當',emoji:'🍔',name:'黑醬安格斯牛肉堡',description:'限定黑醬系列',price:158,specs:[],sort_order:8,ai_parsed:false},
-      {id:'bk10',restaurant:'漢堡王',category:'便當',emoji:'🍗',name:'黑醬烤雞堡',description:'限定黑醬系列',price:128,specs:[],sort_order:9,ai_parsed:false},
-      // 配餐
-      {id:'bk11',restaurant:'漢堡王',category:'點心',emoji:'🍟',name:'薯條',description:'',price:49,specs:[],sort_order:10,ai_parsed:false},
-      {id:'bk12',restaurant:'漢堡王',category:'點心',emoji:'🍟',name:'薯條',description:'',price:59,specs:[],sort_order:11,ai_parsed:false},
-      {id:'bk13',restaurant:'漢堡王',category:'點心',emoji:'🧅',name:'洋蔥圈',description:'',price:55,specs:[],sort_order:12,ai_parsed:false},
-      {id:'bk14',restaurant:'漢堡王',category:'點心',emoji:'🍗',name:'雞塊 4塊',description:'',price:49,specs:[],sort_order:13,ai_parsed:false},
-      {id:'bk15',restaurant:'漢堡王',category:'點心',emoji:'🥧',name:'蘋果派',description:'',price:29,specs:[],sort_order:14,ai_parsed:false},
-      // 飲料
-      {id:'bk16',restaurant:'漢堡王',category:'飲料',emoji:'🥤',name:'可樂',description:'',price:49,specs:[{cat:'杯型',opts:['中杯','大杯']},{cat:'冰量',opts:['正常冰','少冰','去冰']}],sort_order:15,ai_parsed:false},
-      {id:'bk17',restaurant:'漢堡王',category:'飲料',emoji:'🥤',name:'雪碧',description:'',price:49,specs:[{cat:'杯型',opts:['中杯','大杯']},{cat:'冰量',opts:['正常冰','少冰','去冰']}],sort_order:16,ai_parsed:false},
-      {id:'bk18',restaurant:'漢堡王',category:'飲料',emoji:'☕',name:'美式咖啡',description:'',price:39,specs:[{cat:'杯型',opts:['中杯','大杯']},{cat:'冰熱',opts:['熱','冰']}],sort_order:17,ai_parsed:false},
-      {id:'bk19',restaurant:'漢堡王',category:'飲料',emoji:'🧃',name:'柳橙汁',description:'',price:49,specs:[{cat:'杯型',opts:['中杯','大杯']}],sort_order:18,ai_parsed:false},
-    ]
-  }
-];
-
-const ADMIN_PW_KEY = 'lunchPw4';
-const CLASSES = ['教職員','七年甲','七年乙','七年丙','八年甲','八年乙','八年丙','九年甲','九年乙','九年丙'];
-
-/* STATE */
-let S = {
-  tab:'home',
-  events:[],        // 所有場次（menus）
-  items:{},         // { menuId: [items] }
-  orders:{},        // { menuId: [orders] }
-  activeEventId:null,
-  pendingItems:[],   // 本次 AI 解析暫存，尚未儲存
-  menuSearchQ:'',    // 菜單搜尋關鍵字
-  // 套餐組合 sheet
-  comboStep:null,     // null | 'side' | 'drink'
-  comboMain:null,     // 選定的主餐 item
-  comboSides:[],      // 已選配餐 [{item,specs}]
-  comboDrinks:[],     // 已選飲料 [{item,specs}]
-  comboSpecItem:null, // 在套餐 sheet 裡選規格的品項
-  comboSpecSel:{},
-  cart:{},
-  specItem:null, specSel:{}, specQty:1, specNote:'',
-  myName:'', myClass:'',
-  myRecs:null,
-  authed:false, adminEid:null,
-  delId:null,
+/* ══════════════════════════════════════════
+   CONFIG & STATE
+══════════════════════════════════════════ */
+let CFG = {
+  url:  'https://qcbiocalfciliomujevm.supabase.co',
+  key:  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjYmlvY2FsZmNpbGlvbXVqZXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNDcyODEsImV4cCI6MjA5MzYyMzI4MX0.uTn2elgNxQZFYmT7PeiRYICWOgQOnC76R4uf2vJ0GcA',
+  pass: '1234'
 };
+let acts = [], regs = [];
+let activeRegTab = '__all__';
+let selActId = null, selDate = null, selTime = null;
 
-/* ═══ BOOT ═══ */
-(async()=>{
-  await loadEvents();
-  subscribeRT();
-  render();
-})();
+function loadCfg(){}
+function saveCfg(){}
 
-/* ═══ DATA ═══ */
-async function loadEvents(){
-  if(DEMO){ S.events=demoEvents(); S.items={'e1':demoItems('e1'),'e2':demoItems2('e2')}; S.orders={'e1':demoOrders('e1'),'e2':[]}; return; }
-  const today = new Date().toISOString().slice(0,10);
-  // 只載入今天和未來的場次
-  const {data:evs} = await sb.from('menus').select('*').gte('date', today).order('date').order('created_at');
-  S.events = evs||[];
-  // 批次載入所有場次的品項和訂單
-  await Promise.all(S.events.map(async ev=>{
-    const [{data:its},{data:ords}] = await Promise.all([
-      sb.from('menu_items').select('*').eq('menu_id',ev.id).order('sort_order'),
-      sb.from('orders').select('*, order_items(*)').eq('menu_id',ev.id).order('created_at',{ascending:false}),
-    ]);
-    S.items[ev.id] = its||[];
-    S.orders[ev.id] = ords||[];
-  }));
-}
-async function loadEventDetail(eid){
-  if(DEMO) return;
-  const [{data:its},{data:ords}] = await Promise.all([
-    sb.from('menu_items').select('*').eq('menu_id',eid).order('sort_order'),
-    sb.from('orders').select('*, order_items(*)').eq('menu_id',eid).order('created_at',{ascending:false}),
-  ]);
-  S.items[eid] = its||[];
-  S.orders[eid] = ords||[];
-}
-function subscribeRT(){
-  if(DEMO) return;
-  sb.channel('rt').on('postgres_changes',{event:'*',schema:'public',table:'orders'},
-    async()=>{ await loadEvents(); render(); }).subscribe();
-}
-async function dbInsertOrder(order, items){
-  if(DEMO){
-    const o={id:'d'+Date.now(),...order,created_at:new Date().toISOString(),order_items:items.map((it,i)=>({id:'di'+i,...it}))};
-    if(!S.orders[order.menu_id]) S.orders[order.menu_id]=[];
-    S.orders[order.menu_id].unshift(o); return{error:null};
-  }
-  const{data:o,error}=await sb.from('orders').insert(order).select().single();
-  if(error) return{error};
-  await sb.from('order_items').insert(items.map(it=>({...it,order_id:o.id})));
-  await loadEventDetail(order.menu_id);
-  return{error:null};
-}
-async function dbDeleteOrder(id, menuId){
-  if(DEMO){ S.orders[menuId]=S.orders[menuId].filter(o=>o.id!==id); return{error:null}; }
-  const r=await sb.from('orders').delete().eq('id',id);
-  if(!r.error) await loadEventDetail(menuId);
-  return r;
+/* ══════════════════════════════════════════
+   SUPABASE
+══════════════════════════════════════════ */
+function sbH(){ return {'Content-Type':'application/json','apikey':CFG.key,'Authorization':'Bearer '+CFG.key}; }
+async function sbGet(t,q=''){ const r=await fetch(`${CFG.url}/rest/v1/${t}?${q}&order=created_at.asc`,{headers:sbH()}); if(!r.ok) throw new Error(await r.text()); return r.json(); }
+async function sbPost(t,d,pref='resolution=merge-duplicates'){ const r=await fetch(`${CFG.url}/rest/v1/${t}`,{method:'POST',headers:{...sbH(),'Prefer':pref},body:JSON.stringify(d)}); if(!r.ok) throw new Error(await r.text()); }
+async function sbPostReturn(t,d){ const r=await fetch(`${CFG.url}/rest/v1/${t}`,{method:'POST',headers:{...sbH(),'Prefer':'return=representation'},body:JSON.stringify(d)}); if(!r.ok) throw new Error(await r.text()); const arr=await r.json(); return arr[0]||d; }
+async function sbDel(t,q){ const r=await fetch(`${CFG.url}/rest/v1/${t}?${q}`,{method:'DELETE',headers:sbH()}); if(!r.ok) throw new Error(await r.text()); }
+
+/* ══════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════ */
+async function boot(){
+  await loadData();
+  await autoCleanExpired();
+  renderPublic();
 }
 
-/* DEMO */
-function demoEvents(){ return [
-  {id:'e1',title:'5/22 午餐',organizer:'王老師',store_name:'MaMa手作飯盒',deadline:'11:30',is_closed:false,date:new Date().toISOString().slice(0,10),img_url:''},
-  {id:'e2',title:'5/22 下午茶',organizer:'林主任',store_name:'麻古茶坊',deadline:'14:00',is_closed:false,date:new Date().toISOString().slice(0,10),img_url:''},
-];}
-function demoItems(mid){ return [
-  {id:'i1',menu_id:mid,restaurant:'MaMa手作飯盒',emoji:'🍖',name:'排骨便當',description:'炸排骨＋三樣配菜',price:70,specs:[{cat:'飯盒種類',opts:['八角飯盒','圓飯盒']}],sort_order:0},
-  {id:'i2',menu_id:mid,restaurant:'MaMa手作飯盒',emoji:'🍗',name:'雞腿便當',description:'香煎雞腿＋白飯',price:75,specs:[{cat:'飯盒種類',opts:['八角飯盒','圓飯盒']}],sort_order:1},
-  {id:'i3',menu_id:mid,restaurant:'MaMa手作飯盒',emoji:'🥦',name:'素食便當',description:'豆腐地瓜葉香菇',price:60,specs:[],sort_order:2},
-];}
-function demoItems2(mid){ return [
-  {id:'i4',menu_id:mid,restaurant:'麻古茶坊',emoji:'🧋',name:'芝芝金萱雙Q',description:'',price:60,specs:[{cat:'冰塊',opts:['正常冰','少冰','去冰']},{cat:'甜度',opts:['正常糖','半糖','無糖']}],sort_order:0},
-  {id:'i5',menu_id:mid,restaurant:'麻古茶坊',emoji:'🍵',name:'高山金萱茶',description:'',price:30,specs:[{cat:'冰塊',opts:['正常冰','少冰','去冰']},{cat:'甜度',opts:['正常糖','半糖','無糖']}],sort_order:1},
-];}
-function demoOrders(mid){ return [
-  {id:'o1',menu_id:mid,user_name:'王大明',class_name:'八年甲',note:'',total:70,created_at:new Date(Date.now()-3600000).toISOString(),
-   order_items:[{id:'oi1',item_name:'排骨便當',item_emoji:'🍖',quantity:1,unit_price:70,specs_str:'八角飯盒',note:''}]},
-];}
+async function loadData(){
+  try{
+    const aRows = await sbGet('acts');
+    acts = aRows.map(r => r.data);
+    regs = await sbGet('regs');
+  }catch(e){ console.warn('loadData:', e); }
+}
 
-/* ═══ TAB ═══ */
-function goTab(t){
-  if(t==='admin'&&!S.authed){
-    document.getElementById('adminModal').style.display='flex';
-    setTimeout(()=>document.getElementById('adminPwInp').focus(),80); return;
-  }
-  if(t==='menu'&&!S.adminEid&&S.events.length) S.adminEid=S.events[0].id;
-  S.tab=t; S.delId=null;
-  if(t==='admin'&&!S.adminEid&&S.events.length) S.adminEid=S.events[0].id;
-  if(t==='admin') S.pendingItems=[];
-  ['home','menu','admin'].forEach(x=>{
-    const el=document.getElementById('tab-'+x);
-    if(el) el.className='tab-btn'+(x===t?(t==='admin'?' on-admin':' on'):'');
+/* ══════════════════════════════════════════
+   SETUP
+══════════════════════════════════════════ */
+function saveSetup(){
+  closeOverlay('setup-overlay');
+}
+
+/* ══════════════════════════════════════════
+   PUBLIC RENDER
+══════════════════════════════════════════ */
+function renderPublic(){
+  const empty = document.getElementById('pub-empty');
+  const list  = document.getElementById('pub-act-list');
+  if(!acts.length){ empty.style.display='block'; list.style.display='none'; return; }
+  empty.style.display='none'; list.style.display='flex';
+  list.innerHTML = acts.map(a => {
+    const ptsHtml = a.pts&&a.pts.length ? `<div class="apc-pts">${a.pts.map(p=>{
+      // 日程標題行（【研習日程】）
+      if(/^【.+】/.test(p)) return `<div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.7);letter-spacing:.06em;margin-top:10px;margin-bottom:2px">${p}</div>`;
+      // 時間格式行（如 09:00–10:30　課程名稱）
+      if(/^[\d０-９]{2}[:：]/.test(p)){
+        const m = p.match(/^([\d:：–—\-]+)\s+(.+)/);
+        if(m) return `<div style="display:flex;gap:8px;font-size:12px;line-height:1.5"><span style="color:rgba(255,255,255,.5);flex-shrink:0;min-width:85px;font-family:monospace">${m[1]}</span><span style="color:rgba(255,255,255,.85)">${m[2]}</span></div>`;
+      }
+      // 一般摘要行
+      return `<div class="apc-pt">${p}</div>`;
+    }).join('')}</div>` : '';
+    const sessHtml = a.dates.map(dt => {
+      const sk = a.id+'||'+dt.d+'||'+dt.t;
+      const sessRegs = regs.filter(r=>r.sess_key===sk);
+      const bubbles = sessRegs.length ? `
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">
+          ${sessRegs.map((r,i)=>{
+            const colors=[['#dbeafe','#1e40af'],['#dcfce7','#166534'],['#fef9c3','#854d0e'],['#fce7f3','#9d174d'],['#ede9fe','#4c1d95']];
+            const [bg,fg]=colors[i%5];
+            return `<span style="background:${bg};color:${fg};font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;letter-spacing:.02em">${r.name.slice(-2)}</span>`;
+          }).join('')}
+        </div>` : '';
+      const sessPlace = dt.p || a.place || '';
+      return `<button class="sess-btn" onclick="openReg('${esc(a.id)}','${esc(a.title)}','${esc(dt.d)}','${esc(dt.t)}')">
+        <div class="sd" style="color:#111;font-weight:600">${dt.d}</div>
+        <div class="st" style="color:#333">${dt.t}</div>
+        ${sessPlace?`<div style="font-size:11px;color:#555;margin-top:3px;display:flex;align-items:flex-start;gap:4px;text-align:left"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg><span>${sessPlace}</span></div>`:''}
+        <div class="sa">點此報名 →</div>
+        ${bubbles}
+      </button>`;
+    }).join('');
+    // 日期膠囊（排序後取首尾）
+    const dateLabel = (()=>{
+      if(!a.dates||!a.dates.length) return '';
+      // 把日期字串轉為可排序的格式（去掉括號內星期，純數字比較）
+      const sorted = [...a.dates].sort((x,y)=>{
+        const norm = s => s.replace(/[^\d\/]/g,'').replace(/\//g,'');
+        return norm(x.d).localeCompare(norm(y.d));
+      });
+      const first = sorted[0].d;
+      const last  = sorted[sorted.length-1].d;
+      // 移除【區域】前綴再顯示
+      const clean = s => s.replace(/^【[^】]+】/,'').trim();
+      const label = first===last ? clean(first) : clean(first)+'～'+clean(last);
+      const count = a.dates.length > 1 ? `<span style="margin-left:5px;background:rgba(255,255,255,.25);border-radius:99px;padding:1px 6px;font-size:10px">${a.dates.length} 場</span>` : '';
+      return `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.22);color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;letter-spacing:.04em;margin-bottom:8px;border:1px solid rgba(255,255,255,.3)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${label}${count}</span>`;
+    })();
+    return `<div class="act-pub-card">
+      <div class="apc-top">
+        ${dateLabel}
+        <div class="apc-title" style="font-size:19px;font-weight:600;color:#fff;margin-bottom:10px">${a.title}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:${ptsHtml?'14px':'0'}">
+          ${a.org?`<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>${a.org}</span>`:''}
+          ${a.place?`<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${a.place}</span>`:''}
+          ${a.hours?`<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${a.hours}</span>`:''}
+          ${(a.speaker)?`<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${a.speaker}${a.speakerTitle?' ／ '+a.speakerTitle:''}</span>`:''}
+        </div>
+        ${ptsHtml}
+
+      </div>
+      <div class="apc-body">
+        <div class="apc-sess-label">請選擇欲參加的場次</div>
+        <div class="sess-grid">${sessHtml}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════
+   REG MODAL
+══════════════════════════════════════════ */
+function esc(s){ return String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+function pickName(name){
+  document.getElementById('reg-name').value = name;
+  document.querySelectorAll('.name-chip').forEach(b=>{
+    b.classList.toggle('selected', b.textContent===name);
   });
-  if(t!=='home'&&t!=='menu') S.activeEventId=null;
-  render();
+}
+
+function openReg(actId, actTitle, d, t){
+  selActId=actId; selDate=d; selTime=t;
+  document.getElementById('reg-act-name').textContent = actTitle;
+  document.getElementById('reg-sess-info').textContent = d+'　'+t;
+  document.getElementById('reg-name').value = '';
+  document.querySelectorAll('.name-chip').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('reg-form-view').style.display = 'block';
+  document.getElementById('reg-success-view').style.display = 'none';
+  document.getElementById('reg-saving').style.display = 'none';
+  document.getElementById('reg-overlay').classList.add('on');
+  setTimeout(()=>document.getElementById('reg-name').focus(), 100);
+}
+
+async function submitReg(){
+  const name = document.getElementById('reg-name').value.trim();
+  if(!name){ toast('請填寫姓名'); return; }
+  const act = acts.find(a=>a.id===selActId)||{};
+  const now = new Date();
+  const ts = `${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const sessKey = selActId+'||'+selDate+'||'+selTime;
+  const reg = { act_id:selActId, sess_key:sessKey, name, reg_time:ts };
+  const saveBtn = document.querySelector('#reg-form-view .btn-full');
+  if(saveBtn) saveBtn.disabled = true;
+  document.getElementById('reg-saving').style.display='flex';
+  try{
+    const posted = await sbPostReturn('regs', reg);
+    regs.push(posted||reg);
+
+    // 同步寫入 hist 參加記錄
+    try{
+      const histRes = await fetch(`${CFG.url}/rest/v1/history`,{
+        method:'POST',
+        headers:{...sbH(),'Prefer':'return=minimal'},
+        body:JSON.stringify({
+          act_id: selActId,
+          act_title: act.title||selActId,
+          act_org: act.org||'',
+          sess_date: selDate,
+          sess_time: selTime,
+          name,
+          reg_time: ts
+        })
+      });
+      if(!histRes.ok) console.warn('hist 寫入失敗:', await histRes.text());
+    }catch(e){ console.warn('hist 寫入失敗:', e); }
+
+    document.getElementById('reg-saving').style.display='none';
+    if(saveBtn) saveBtn.disabled = false;
+    document.getElementById('reg-form-view').style.display='none';
+    document.getElementById('success-msg').textContent = `${name}，您已完成本系統報名「${act.title||''}」${selDate} ${selTime} 場次。`;
+    const speBox = document.getElementById('spe-link-box');
+    speBox.innerHTML = `
+      <div style="margin-top:14px;background:#e8f0fb;border:1px solid #c8d9f5;border-radius:10px;padding:14px 16px;text-align:left">
+        <div style="font-size:13px;font-weight:500;color:#1c2b4a;margin-bottom:8px">⚠️ 請記得至特殊教育資訊網完成正式報名</div>
+        <div style="font-size:12px;color:#4a4a6a;margin-bottom:12px;line-height:1.7">本系統報名僅供辦公室統計意願，<strong>正式報名請至特殊教育資訊網</strong>完成。</div>
+        <a href="https://special.moe.gov.tw/menuLayout/register/study" target="_blank"
+           style="display:inline-flex;align-items:center;gap:7px;background:#2563a8;color:#fff;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:500;text-decoration:none">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          前往特殊教育資訊網研習報名
+        </a>
+      </div>`;
+    document.getElementById('reg-success-view').style.display='block';
+  }catch(e){
+    document.getElementById('reg-saving').style.display='none';
+    if(saveBtn) saveBtn.disabled = false;
+    document.getElementById('reg-form-view').style.display='block';
+    // 顯示詳細錯誤訊息
+    const errMsg = e.message||'未知錯誤';
+    toast('❌ 報名失敗：'+errMsg.slice(0,40));
+    console.error('submitReg error:', e);
+  }
+}
+
+/* ══════════════════════════════════════════
+   ADMIN
+══════════════════════════════════════════ */
+function openLoginModal(){
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-err').style.display='none';
+  document.getElementById('login-overlay').classList.add('on');
+  setTimeout(()=>document.getElementById('login-pass').focus(), 100);
 }
 function doLogin(){
-  const pw=document.getElementById('adminPwInp').value;
-  const stored=localStorage.getItem(ADMIN_PW_KEY)||'1234';
-  if(pw===stored){
-    S.authed=true;
-    document.getElementById('adminModal').style.display='none';
-    document.getElementById('adminPwInp').value='';
-    S.tab='admin';
-    if(!S.adminEid&&S.events.length) S.adminEid=S.events[0].id;
-    ['home','rec','admin'].forEach(x=>{const el=document.getElementById('tab-'+x);if(el)el.className='tab-btn'+(x==='admin'?' on-admin':'');});
-    render(); toast('歡迎，管理員 👋','ok');
-  } else { toast('密碼錯誤','err'); document.getElementById('adminPwInp').value=''; }
-}
-function closeLogin(){ document.getElementById('adminModal').style.display='none'; document.getElementById('adminPwInp').value=''; }
-
-/* ═══ RENDER ═══ */
-function render(){
-  const mc=document.getElementById('main');
-  const sb2=document.getElementById('subBar');
-  const hasCart=Object.keys(S.cart).length>0;
-  if(S.tab==='home'){
-    if(S.activeEventId) mc.innerHTML=renderOrderPage();
-    else mc.innerHTML=renderHome();
-    sb2.style.display=(hasCart&&S.activeEventId)?'block':'none';
-    const btn=document.getElementById('subBtn');
-    if(btn){ const ev=S.events.find(e=>e.id===S.activeEventId); btn.disabled=isEventClosed(ev); }
-  } else if(S.tab==='menu'){
-    mc.innerHTML=renderMenuTab(); sb2.style.display='none';
+  if(document.getElementById('login-pass').value===CFG.pass){
+    closeOverlay('login-overlay');
+    document.getElementById('adm-overlay').classList.add('on');
+    renderAdmActs(); refreshRegs(); populateDocSelects();
   } else {
-    mc.innerHTML=renderAdmin(); sb2.style.display='none';
+    document.getElementById('login-err').style.display='block';
   }
 }
-
-/* ── HOME: 場次列表 ── */
-function isEventClosed(ev){
-  if(!ev) return true;
-  return ev.is_closed===true;
-}
-function fmtDeadline(ev){
-  return{text:'開放中',cls:'badge-open'};
-}
-function renderHome(){
-  let html=`<div class="page-title">今日點餐場次</div>
-    <div class="page-sub">選擇您要參加的場次，即可開始點餐</div>
-    <div class="event-list">`;
-  const today=new Date().toISOString().slice(0,10);
-  const todayEvs=S.events.filter(e=>e.date===today||!e.date);
-  if(!todayEvs.length){
-    html+=`</div><div class="empty-events"><span class="ei">📭</span><p>今日尚無點餐場次<br>請等待承辦人建立</p></div>`;
-    return html;
-  }
-  todayEvs.forEach(ev=>{
-    const closed=isEventClosed(ev);
-    const status=fmtDeadline(ev);
-    const ords=S.orders[ev.id]||[];
-    const cnt=ords.length;
-    html+=`<div class="event-card${closed?' closed-card':''}" onclick="openEvent('${ev.id}')">
-      <div class="ec-top">
-        <div class="ec-left">
-          <div class="ec-badges"></div>
-          <div class="ec-title">${esc(ev.title)}</div>
-          ${ev.organizer?`<div class="ec-organizer">👤 承辦：${esc(ev.organizer)}</div>`:''}
-        </div>
-      </div>
-      <div class="ec-bot">
-        <div class="ec-store">🏪 ${esc(ev.store_name||'（尚未設定店家）')}</div>
-        <div class="ec-count${cnt===0?' none':' ok'}">${cnt} 人已點餐</div>
-      </div>
-    </div>`;
+function closeAdmin(){ document.getElementById('adm-overlay').classList.remove('on'); renderPublic(); }
+function admTab(t){
+  ['acts','regs','doc','hist'].forEach(id=>{
+    document.getElementById('adm-'+id).style.display = id===t?'block':'none';
+    document.getElementById('at-'+id).classList.toggle('on', id===t);
   });
-  html+=`</div>`;
-  return html;
-}
-function openEvent(eid){
-  if(isEventClosed(S.events.find(e=>e.id===eid))){ toast('此場次已截止','warn'); return; }
-  S.activeEventId=eid; S.cart={}; S.menuSearchQ='';
-  render();
+  if(t==='regs') refreshRegs();
+  if(t==='doc') populateDocSelects();
+  if(t==='hist') renderHist();
 }
 
-/* ── ORDER PAGE ── */
-function renderOrderPage(){
-  const ev=S.events.find(e=>e.id===S.activeEventId);
-  if(!ev) return '<div class="empty"><span class="ei">❌</span><p>找不到此場次</p></div>';
-  const items=S.items[S.activeEventId]||[];
-  const closed=isEventClosed(ev);
+let _histData = []; // 快取供匯出使用
 
-  let html=`
-    <div class="order-page-header">
-      <button class="back-btn" onclick="S.activeEventId=null;S.cart={};render()">← 返回場次</button>
-      <div class="event-info-banner">
-        <strong>${esc(ev.title)}</strong>
-        ${ev.organizer?`承辦：${esc(ev.organizer)}　`:''}${ev.store_name?`店家：${esc(ev.store_name)}`:''}
-      </div>
-    </div>`;
-
-  if(closed) html+=`<div style="background:var(--rdl);border:1.5px solid #fca5a5;border-radius:var(--rmd);padding:10px 13px;font-size:.8rem;color:var(--rd);font-weight:700;margin-bottom:12px;text-align:center">⛔ 此場次已截止，無法點餐</div>`;
-
-  html+=`<div class="id-card">
-    <div class="fld"><label>姓名</label><input class="inp" id="uName" placeholder="王小明" value="${esc(S.myName)}"></div>
-  </div>`;
-
-  // 搜尋列
-  html+=`<div style="margin-bottom:12px;position:relative">
-    <input class="inp" id="menuSearch" placeholder="🔍 搜尋餐點或飲料…"
-      oninput="if(!this._composing)filterMenu(this.value)"
-      oncompositionstart="this._composing=true"
-      oncompositionend="this._composing=false;filterMenu(this.value)"
-      style="padding-left:14px;font-size:.88rem">
-  </div>`;
-  // 搜尋框初始值在 render 後補入（避免 template literal 問題）
-  setTimeout(()=>{
-    const ms=document.getElementById('menuSearch');
-    if(ms && S.menuSearchQ){ ms.value=S.menuSearchQ; filterMenu(S.menuSearchQ); }
-  },0);
-
-  // 菜單品項 — 按分類顯示
-  const CAT_ORDER=['便當','飲料','點心','其他'];
-  const CAT_ICON={'便當':'🍱','飲料':'🧋','點心':'🍰','其他':'🍽️'};
-  const q=(S.menuSearchQ||'').trim().toLowerCase();
-  const filteredItems=q ? items.filter(it=>(it.name||'').toLowerCase().includes(q)||(it.description||'').toLowerCase().includes(q)||(it.restaurant||'').toLowerCase().includes(q)) : items;
-
-  if(!items.length){
-    html+='<div class="empty"><span class="ei">🍽️</span><p>尚無品項，承辦人尚未設定菜單</p></div>';
-  } else if(filteredItems.length===0){
-    html+='<div class="empty"><span class="ei">🔍</span><p>找不到「'+q+'」相關餐點</p></div>';
-  } else {
-    const byCat={};
-    filteredItems.forEach(it=>{const cat=it.category||'其他';if(!byCat[cat])byCat[cat]=[];byCat[cat].push(it);});
-    const orderedCats=[...CAT_ORDER,...Object.keys(byCat).filter(c=>!CAT_ORDER.includes(c))].filter(c=>byCat[c]);
-    orderedCats.forEach(cat=>{
-      const its=byCat[cat];
-      html+=`<div class="rest-block"><div class="rest-name">${CAT_ICON[cat]||'🍽️'} ${cat}</div><div class="menu-grid">`;
-      its.forEach(item=>{
-        const keys=Object.keys(S.cart).filter(k=>k.startsWith(item.id+'__'));
-        const totalQty=keys.reduce((s,k)=>s+(S.cart[k]?.qty||0),0);
-        const hasSpec=item.specs&&item.specs.length>0;
-        html+=`<div class="m-card${totalQty>0?' sel':''}">
-        <span class="m-emoji">${esc(item.emoji)}</span>
-        <div class="m-name">${esc(item.name)}</div>
-        ${item.description?`<div class="m-desc">${esc(item.description)}</div>`:''}
-        ${item.price>0?`<div class="m-price">$${item.price}</div>`:'<div class="m-price" style="color:var(--sll)">詢價</div>'}
-        ${hasSpec?`<div class="m-spec">點擊選規格 ›</div>`:''}
-        <div class="qty-row" onclick="event.stopPropagation()">
-          <button class="qb" onclick="event.stopPropagation();adjCart('${item.id}',-1)">−</button>
-          <span class="qn">${totalQty}</span>
-          <button class="qb" onclick="event.stopPropagation();${hasSpec?`openSpec('${item.id}')`:`quickAdd('${item.id}')`}">＋</button>
-        </div>
-      </div>`;
-      });
-      html+='</div></div>';
-    });
-  }
-
-  // 購物車預覽
-  const cartKeys=Object.keys(S.cart);
-  if(cartKeys.length){
-    let total=0;
-    html+=`<div class="cart-panel"><div class="fbe" style="margin-bottom:9px"><span style="font-weight:700;font-size:.85rem">📋 確認清單</span><button class="btn btn-out btn-sm" onclick="S.cart={};render()">清空</button></div>`;
-    cartKeys.forEach(k=>{
-      const ci=S.cart[k]; if(!ci) return;
-      total+=ci.price*ci.qty;
-      html+=`<div class="cart-row">
-        <div><span>${esc(ci.emoji)} ${esc(ci.name)} <strong style="color:var(--or)">× ${ci.qty}</strong></span>
-          ${ci.specsStr?`<div class="cart-spec">${esc(ci.specsStr)}</div>`:''}
-          ${ci.note?`<div class="cart-note">備註：${esc(ci.note)}</div>`:''}
-        </div>
-        <div style="display:flex;align-items:center;gap:7px">
-          ${ci.price>0?`<span style="font-weight:700">$${ci.price*ci.qty}</span>`:''}
-          <button class="qb" onclick="removeKey('${k}')" style="border-color:transparent;color:var(--sll)">✕</button>
-        </div>
-      </div>`;
-    });
-    if(total>0) html+=`<div class="cart-total"><span>合計</span><span>$${total}</span></div>`;
-    html+='</div>';
-  }
-  html+=`<div style="margin-top:12px">
-    <label style="font-size:.68rem;font-weight:700;color:var(--sll);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">整體備註</label>
-    <input class="inp" id="orderNote" placeholder="例：統一領取地點、特殊需求…" style="font-size:.82rem">
-  </div>`;
-  return html;
-}
-
-/* ── CART OPS ── */
-function filterMenu(val){
-  S.menuSearchQ=val||'';
-  const q=(val||'').trim().toLowerCase();
-  // 直接操控 DOM，不重繪頁面，不打斷輸入法
-  document.querySelectorAll('.m-card').forEach(card=>{
-    const name=(card.querySelector('.m-name')?.textContent||'').toLowerCase();
-    const desc=(card.querySelector('.m-desc')?.textContent||'').toLowerCase();
-    card.style.display=(!q||name.includes(q)||desc.includes(q))?'':'none';
-  });
-  // 隱藏空分類
-  document.querySelectorAll('.rest-block').forEach(block=>{
-    const visible=[...block.querySelectorAll('.m-card')].some(c=>c.style.display!=='none');
-    block.style.display=visible?'':'none';
-  });
-  // 空結果提示
-  let noResult=document.getElementById('searchEmpty');
-  const anyVisible=[...document.querySelectorAll('.m-card')].some(c=>c.style.display!=='none');
-  if(q && !anyVisible){
-    if(!noResult){
-      noResult=document.createElement('div');
-      noResult.id='searchEmpty';
-      noResult.className='empty';
-      noResult.innerHTML='<span class="ei">🔍</span><p>找不到「'+(S.menuSearchQ||q)+'」相關餐點</p>';
-      const menuArea=document.querySelector('.rest-block')?.parentNode||document.getElementById('main');
-      if(menuArea) menuArea.appendChild(noResult);
-    }
-  } else {
-    noResult?.remove();
-  }
-}
-
-
-/* ══════════════════════════════════
-   套餐組合流程
-══════════════════════════════════ */
-function startCombo(id){
-  const ev=S.events.find(e=>e.id===S.activeEventId);
-  if(isEventClosed(ev)){toast('此場次已截止','err');return;}
-  const item=(S.items[S.activeEventId]||[]).find(i=>i.id===id);
-  if(!item) return;
-  // 有規格的主餐先選規格，選完再進套餐流程
-  if(item.specs&&item.specs.length>0){
-    S.specItem=item; S.specSel={}; S.specQty=1; S.specNote='';
-    (item.specs||[]).forEach(sp=>{if(sp.opts.length)S.specSel[sp.cat]=sp.opts[0];});
-    S.specItem._comboMode=true;  // 標記為套餐模式
-    renderSheet();
-    document.getElementById('specOverlay').style.display='flex';
-    // 修改確認按鈕文字
-    const btn=document.getElementById('specOverlay').querySelector('.btn-or');
-    if(btn) btn.textContent='確認主餐，繼續選配餐 →';
-    return;
-  }
-  // 無規格直接開套餐流程，從主餐頁開始
-  S.comboMain=null;
-  S.comboSides=[]; S.comboDrinks=[];
-  S.comboStep='main';
-  // 預設選中這個品項
-  S.comboMain={item, specsStr:'', qty:1, note:''};
-  renderComboSheet();
-  document.getElementById('comboOverlay').style.display='flex';
-}
-
-function renderComboSheet(){
-  const el=document.getElementById('comboSheetContent');
-  if(!el) return;
-  const items=S.items[S.activeEventId]||[];
-  const mainItems=items.filter(i=>i.category==='便當');
-  const sideItems=items.filter(i=>i.category==='點心');
-  const drinkItems=items.filter(i=>i.category==='飲料');
-  // 判斷是否為速食（有配餐品項）→ 三頁；否則兩頁
-  const isFastFood=sideItems.length>0;
-
-  // 步驟指示器
-  const steps=isFastFood?['主餐','配餐','飲料']:['主餐','飲料'];
-  const stepIdx=isFastFood
-    ?{main:0,side:1,drink:2}[S.comboStep]||0
-    :{main:0,drink:1}[S.comboStep]||0;
-
-  let html=`<div style="display:flex;align-items:center;gap:0;margin-bottom:14px">`;
-  steps.forEach((s,i)=>{
-    const active=i===stepIdx, done=i<stepIdx;
-    const bg=active?'var(--or)':(done?'var(--gr)':'var(--bo)');
-    const fg=(active||done)?'#fff':'var(--sll)';
-    const lbl=active?'var(--or)':(done?'var(--gr)':'var(--sll)');
-    const fw=active?700:400;
-    html+='<div style="flex:1;text-align:center">'
-      +'<div style="width:28px;height:28px;border-radius:50%;margin:0 auto 3px;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;background:'+bg+';color:'+fg+'">'+(done?'✓':(i+1))+'</div>'
-      +'<div style="font-size:.68rem;font-weight:'+fw+';color:'+lbl+'">'+s+'</div>'
-      +'</div>';
-    if(i<steps.length-1) html+=`<div style="flex:0 0 20px;height:2px;background:${done?'var(--gr)':'var(--bo)'};margin-bottom:14px"></div>`;
-  });
-  html+=`</div>`;
-
-  if(S.comboStep==='main'){
-    html+=`<div class="sheet-title">🍔 選主餐</div>`;
-    if(!mainItems.length){
-      html+=`<div style="font-size:.8rem;color:var(--sll);text-align:center;padding:16px">此場次無主餐品項</div>`;
-    } else {
-      html+=`<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">`;
-      mainItems.forEach(item=>{
-        const sel=S.comboMain&&S.comboMain.item.id===item.id;
-        html+=`<div onclick="selectComboMain('${item.id}')"
-          style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:2px solid ${sel?'var(--or)':'var(--bo)'};border-radius:var(--rmd);background:${sel?'var(--orl)':'var(--ca)'};cursor:pointer">
-          <div style="flex:1">
-            <span style="font-size:1.2rem">${esc(item.emoji)}</span>
-            <span style="font-weight:600;font-size:.9rem;margin-left:7px">${esc(item.name)}</span>
-            ${item.description?`<div style="font-size:.72rem;color:var(--sll);margin-top:2px;margin-left:26px">${esc(item.description)}</div>`:''}
-          </div>
-          <div style="text-align:right;flex-shrink:0;margin-left:8px">
-            ${item.price>0?`<div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:.95rem;color:var(--or)">$${item.price}</div>`:''}
-            <div style="width:22px;height:22px;border-radius:50%;border:2px solid ${sel?'var(--or)':'var(--bo)'};background:${sel?'var(--or)':'transparent'};display:flex;align-items:center;justify-content:center;font-size:.75rem;color:#fff;margin-top:3px;margin-left:auto">${sel?'✓':''}</div>
-          </div>
-        </div>`;
-      });
-      html+=`</div>`;
-    }
-    html+=`<button class="btn btn-or btn-full" ${!S.comboMain?'disabled':''}
-      onclick="S.comboStep=(S.items[S.activeEventId]||[]).filter(i=>i.category==='點心').length?'side':'drink';renderComboSheet()"
-      style="${!S.comboMain?'opacity:.5':''}"
-    >${isFastFood?'下一步：選配餐 →':'下一步：選飲料 →'}</button>
-    <button class="btn btn-out btn-full" style="margin-top:7px" onclick="closeCombo()">取消</button>`;
-
-  } else if(S.comboStep==='side'){
-    html+=`<div class="sheet-title">🍟 加配餐？<span style="font-size:.75rem;color:var(--sll);font-weight:400;margin-left:6px">可多選，或直接跳過</span></div>`;
-    // 主餐摘要
-    if(S.comboMain) html+=`<div style="background:var(--orl);border-radius:var(--rsm);padding:7px 11px;margin-bottom:11px;font-size:.8rem;color:var(--ord)">✅ 主餐：${esc(S.comboMain.item.emoji)} ${esc(S.comboMain.item.name)}</div>`;
-    if(!sideItems.length){
-      html+=`<div style="font-size:.8rem;color:var(--sll);text-align:center;padding:16px">此場次無配餐品項</div>`;
-    } else {
-      html+=`<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">`;
-      sideItems.forEach(item=>{
-        const sel=S.comboSides.find(s=>s.item.id===item.id);
-        html+=`<div onclick="toggleComboItem('side','${item.id}')"
-          style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1.5px solid ${sel?'var(--or)':'var(--bo)'};border-radius:var(--rmd);background:${sel?'var(--orl)':'var(--ca)'};cursor:pointer">
-          <div><span style="font-size:1.1rem">${esc(item.emoji)}</span>
-            <span style="font-weight:600;font-size:.88rem;margin-left:6px">${esc(item.name)}</span>
-            ${item.price>0?`<span style="color:var(--or);font-weight:700;font-size:.82rem;margin-left:6px">$${item.price}</span>`:''}
-          </div>
-          <div style="width:22px;height:22px;border-radius:50%;border:2px solid ${sel?'var(--or)':'var(--bo)'};background:${sel?'var(--or)':'transparent'};display:flex;align-items:center;justify-content:center;font-size:.75rem;color:#fff;flex-shrink:0">${sel?'✓':''}</div>
-        </div>`;
-      });
-      html+=`</div>`;
-    }
-    if(S.comboSides.length) html+=`<div style="font-size:.75rem;color:var(--gr);margin-bottom:9px">已選：${S.comboSides.map(s=>s.item.name).join('、')}</div>`;
-    html+=`<div style="display:flex;gap:7px">
-      <button class="btn btn-out" onclick="S.comboStep='main';renderComboSheet()">← 返回</button>
-      <button class="btn btn-or btn-full" onclick="S.comboStep='drink';renderComboSheet()">下一步：選飲料 →</button>
-    </div>`;
-
-  } else if(S.comboStep==='drink'){
-    html+=`<div class="sheet-title">🧋 加飲料？<span style="font-size:.75rem;color:var(--sll);font-weight:400;margin-left:6px">可多選，或直接完成</span></div>`;
-    // 摘要
-    const sideNames=S.comboSides.map(s=>s.item.name).join('、');
-    html+=`<div style="background:var(--orl);border-radius:var(--rsm);padding:7px 11px;margin-bottom:11px;font-size:.78rem;color:var(--ord);line-height:1.7">`;
-    if(S.comboMain) html+=`✅ ${esc(S.comboMain.item.emoji)} ${esc(S.comboMain.item.name)}<br>`;
-    if(sideNames) html+=`🍟 ${sideNames}<br>`;
-    html+=`</div>`;
-    if(!drinkItems.length){
-      html+=`<div style="font-size:.8rem;color:var(--sll);text-align:center;padding:16px">此場次無飲料品項</div>`;
-    } else {
-      html+=`<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">`;
-      drinkItems.forEach(item=>{
-        const sel=S.comboDrinks.find(d=>d.item.id===item.id);
-        html+=`<div onclick="toggleComboItem('drink','${item.id}')"
-          style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1.5px solid ${sel?'var(--or)':'var(--bo)'};border-radius:var(--rmd);background:${sel?'var(--orl)':'var(--ca)'};cursor:pointer">
-          <div><span style="font-size:1.1rem">${esc(item.emoji)}</span>
-            <span style="font-weight:600;font-size:.88rem;margin-left:6px">${esc(item.name)}</span>
-            ${item.price>0?`<span style="color:var(--or);font-weight:700;font-size:.82rem;margin-left:6px">$${item.price}</span>`:''}
-            ${item.specs&&item.specs.length?`<span style="font-size:.65rem;color:var(--in);margin-left:4px">規格可選</span>`:''}
-          </div>
-          <div style="width:22px;height:22px;border-radius:50%;border:2px solid ${sel?'var(--or)':'var(--bo)'};background:${sel?'var(--or)':'transparent'};display:flex;align-items:center;justify-content:center;font-size:.75rem;color:#fff;flex-shrink:0">${sel?'✓':''}</div>
-        </div>`;
-      });
-      html+=`</div>`;
-    }
-    // 小計
-    const total=(S.comboMain?S.comboMain.item.price||0:0)+
-      S.comboSides.reduce((s,x)=>s+(x.item.price||0),0)+
-      S.comboDrinks.reduce((s,x)=>s+(x.item.price||0),0);
-    if(total>0) html+=`<div style="text-align:right;font-family:'Nunito',sans-serif;font-weight:800;font-size:.95rem;color:var(--or);margin-bottom:9px">小計 $${total}</div>`;
-    html+=`<div style="display:flex;gap:7px">
-      <button class="btn btn-out" onclick="S.comboStep=(S.items[S.activeEventId]||[]).filter(i=>i.category==='點心').length?'side':'main';renderComboSheet()">← 返回</button>
-      <button class="btn btn-or btn-full" onclick="confirmCombo()">✅ 加入清單</button>
-    </div>`;
-  }
-
-  el.innerHTML=html;
-}
-
-function selectComboMain(id){
-  const items=S.items[S.activeEventId]||[];
-  const item=items.find(i=>i.id===id);
-  if(!item) return;
-  if(item.specs&&item.specs.length){
-    // 有規格彈出選規格，之後再設定 comboMain
-    S.specItem=item; S.specSel={}; S.specQty=1; S.specNote='';
-    (item.specs||[]).forEach(sp=>{if(sp.opts.length)S.specSel[sp.cat]=sp.opts[0];});
-    S.specItem._comboMode=true;
-    renderSheet();
-    document.getElementById('comboOverlay').style.display='none';
-    document.getElementById('specOverlay').style.display='flex';
-    const btn=document.getElementById('specOverlay').querySelector('.btn-or');
-    if(btn) btn.textContent='確認，繼續選配餐 →';
-    return;
-  }
-  S.comboMain={item, specsStr:'', qty:1, note:''};
-  renderComboSheet();
-}
-
-function toggleComboItem(type, id){
-  const items=S.items[S.activeEventId]||[];
-  const item=items.find(i=>i.id===id);
-  if(!item) return;
-  const arr=type==='side'?S.comboSides:S.comboDrinks;
-  const idx=arr.findIndex(x=>x.item.id===id);
-  if(idx>=0){
-    // 已選 → 取消
-    arr.splice(idx,1);
-    renderComboSheet();
-  } else {
-    // 有規格 → 彈出規格 mini-picker
-    if(item.specs&&item.specs.length){
-      showComboSpecPicker(type, item, arr);
-    } else {
-      arr.push({item, specsStr:''});
-      renderComboSheet();
-    }
-  }
-}
-
-function showComboSpecPicker(type, item, arr){
-  // 在 comboSheetContent 裡疊加一個規格選擇層
-  const specSel={};
-  item.specs.forEach(sp=>{if(sp.opts.length) specSel[sp.cat]=sp.opts[0];});
-
-  function buildPickerHTML(){
-    let h=`<div style="position:absolute;inset:0;background:rgba(255,255,255,.97);border-radius:var(--rxl);padding:18px;z-index:10;display:flex;flex-direction:column">
-      <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:1rem;border-left:4px solid var(--or);padding-left:9px;margin-bottom:14px">${esc(item.emoji)} ${esc(item.name)}${item.price>0?' <span style=\"color:var(--or)\">$'+item.price+'</span>':''}</div>`;
-    item.specs.forEach(sp=>{
-      h+=`<div style="margin-bottom:12px"><div style="font-size:.68rem;font-weight:700;color:var(--sll);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${esc(sp.cat)}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:5px">`;
-      sp.opts.forEach(o=>{
-        const on=specSel[sp.cat]===o;
-        h+=`<button onclick="comboSpecSel['${esc(sp.cat)}']='${esc(o)}';document.getElementById('comboSpecPreview').innerHTML=renderComboSpecBtn()"
-          style="padding:7px 16px;border:1.5px solid ${on?'var(--or)':'var(--bo)'};border-radius:20px;font-size:.82rem;font-weight:600;background:${on?'var(--or)':'var(--ca)'};color:${on?'#fff':'var(--slm)'};cursor:pointer">${esc(o)}</button>`;
-      });
-      h+=`</div></div>`;
-    });
-    h+=`<div id="comboSpecPreview"></div>
-      <div style="display:flex;gap:7px;margin-top:auto;padding-top:12px">
-        <button class="btn btn-out" onclick="this.closest('[style*=absolute]').remove()">取消</button>
-        <button class="btn btn-or btn-full" onclick="confirmComboSpec()">確認加入</button>
-      </div>
-    </div>`;
-    return h;
-  }
-
-  // 把規格選擇疊在 sheet 上面
-  const sheet=document.querySelector('#comboOverlay .sheet');
-  if(!sheet) return;
-  sheet.style.position='relative';
-  const picker=document.createElement('div');
-  picker.innerHTML=buildPickerHTML();
-  sheet.appendChild(picker.firstChild);
-
-  // 全域暫存
-  window.comboSpecSel=specSel;
-  window.confirmComboSpec=function(){
-    const specsStr=Object.values(window.comboSpecSel).join('/');
-    arr.push({item, specsStr});
-    const el=document.querySelector('#comboOverlay .sheet [style*="absolute"]');
-    if(el) el.remove();
-    renderComboSheet();
-  };
-  window.renderComboSpecBtn=function(){
-    return '<div style="font-size:.75rem;color:var(--gr);margin-top:4px">已選：'+Object.values(window.comboSpecSel).join(' / ')+'</div>';
-  };
-}
-
-function confirmCombo(){
-  const ev=S.events.find(e=>e.id===S.activeEventId);
-  if(isEventClosed(ev)){toast('此場次已截止','err');return;}
-  if(!S.comboMain){toast('請先選擇主餐','warn');return;}
-  // 加入主餐
-  const mainKey=S.comboMain.item.id+'__'+S.comboMain.specsStr+'__'+Date.now();
-  S.cart[mainKey]={itemId:S.comboMain.item.id,name:S.comboMain.item.name,emoji:S.comboMain.item.emoji,
-    qty:S.comboMain.qty,price:S.comboMain.item.price,specsStr:S.comboMain.specsStr,note:''};
-  // 加入配餐
-  S.comboSides.forEach((s,i)=>{
-    const k=s.item.id+'__'+s.specsStr+'__'+(Date.now()+i+1);
-    S.cart[k]={itemId:s.item.id,name:s.item.name,emoji:s.item.emoji,qty:1,price:s.item.price,specsStr:s.specsStr,note:''};
-  });
-  // 加入飲料
-  S.comboDrinks.forEach((d,i)=>{
-    const k=d.item.id+'__'+d.specsStr+'__'+(Date.now()+i+100);
-    S.cart[k]={itemId:d.item.id,name:d.item.name,emoji:d.item.emoji,qty:1,price:d.item.price,specsStr:d.specsStr,note:''};
-  });
-  closeCombo();
-  const total=(S.comboMain.item.price||0)+
-    S.comboSides.reduce((s,x)=>s+(x.item.price||0),0)+
-    S.comboDrinks.reduce((s,x)=>s+(x.item.price||0),0);
-  toast(`已加入 ${1+S.comboSides.length+S.comboDrinks.length} 項${total>0?' ($'+total+')':''}` ,'ok');
-  render();
-}
-
-function closeCombo(){
-  document.getElementById('comboOverlay').style.display='none';
-  S.comboStep=null; S.comboMain=null; S.comboSides=[]; S.comboDrinks=[];
-}
-
-function quickAdd(id){
-  const ev=S.events.find(e=>e.id===S.activeEventId);
-  if(isEventClosed(ev)){toast('此場次已截止','err');return;}
-  const key=id+'__';
-  if(!S.cart[key]){const item=(S.items[S.activeEventId]||[]).find(i=>i.id===id);S.cart[key]={itemId:id,name:item.name,emoji:item.emoji,qty:0,price:item.price,specsStr:'',note:''};}
-  S.cart[key].qty++;render();
-}
-function adjCart(id,d){
-  const ev=S.events.find(e=>e.id===S.activeEventId);
-  if(d>0&&isEventClosed(ev)){toast('此場次已截止','err');return;}
-  const keys=Object.keys(S.cart).filter(k=>k.startsWith(id+'__'));
-  if(!keys.length&&d>0){quickAdd(id);return;}
-  if(keys.length){const k=keys[keys.length-1];S.cart[k].qty=Math.max(0,S.cart[k].qty+d);if(!S.cart[k].qty)delete S.cart[k];}
-  render();
-}
-function removeKey(k){delete S.cart[k];render();}
-
-/* ── SPEC SHEET ── */
-function openSpec(id){
-  const ev=S.events.find(e=>e.id===S.activeEventId);
-  if(isEventClosed(ev)){toast('此場次已截止','err');return;}
-  S.specItem=(S.items[S.activeEventId]||[]).find(i=>i.id===id);
-  S.specSel={};
-  (S.specItem.specs||[]).forEach(sp=>{if(sp.opts.length)S.specSel[sp.cat]=sp.opts[0];});
-  S.specQty=1;S.specNote='';
-  renderSheet();
-  document.getElementById('specOverlay').style.display='flex';
-}
-function renderSheet(){
-  const item=S.specItem;
-  document.getElementById('sheetTitle').innerHTML=`${esc(item.emoji)} ${esc(item.name)}${item.price>0?` <span style="color:var(--or);font-size:.9rem">$${item.price}</span>`:''}`;
-  let html='';
-  (item.specs||[]).forEach(sp=>{
-    html+=`<div class="spec-sec"><div class="spec-lbl">${esc(sp.cat)}</div><div class="spec-opts">
-      ${sp.opts.map(o=>`<button class="spec-opt${S.specSel[sp.cat]===o?' on':''}" onclick="S.specSel['${esc(sp.cat)}']='${esc(o)}';renderSheet()">${esc(o)}</button>`).join('')}
-    </div></div>`;
-  });
-  html+=`<div class="spec-sec"><div class="spec-lbl">數量</div>
-    <div class="sheet-qty">
-      <button class="sqb" onclick="if(S.specQty>1){S.specQty--;renderSheet()}">−</button>
-      <span class="sqn">${S.specQty}</span>
-      <button class="sqb" onclick="S.specQty++;renderSheet()">＋</button>
-      ${item.price>0?`<span style="font-family:'Nunito',sans-serif;font-weight:800;color:var(--or);margin-left:6px">$${item.price*S.specQty}</span>`:''}
-    </div>
-  </div>
-  <div class="spec-sec"><div class="spec-lbl">備註</div>
-    <textarea class="note-inp" rows="2" placeholder="例：不要辣…" oninput="S.specNote=this.value">${esc(S.specNote)}</textarea>
-  </div>`;
-  document.getElementById('sheetBody').innerHTML=html;
-}
-function confirmSpec(){
-  const item=S.specItem;
-  const specsStr=Object.values(S.specSel).join('/');
-  // 套餐模式：規格選完後進套餐配餐流程
-  if(item._comboMode){
-    item._comboMode=false;
-    closeSpec();
-    S.comboMain={item, specsStr, qty:S.specQty, note:S.specNote};
-    S.comboSides=[]; S.comboDrinks=[];
-    S.comboStep='side';
-    renderComboSheet();
-    document.getElementById('comboOverlay').style.display='flex';
-    return;
-  }
-  const key=item.id+'__'+specsStr+'__'+Date.now();
-  S.cart[key]={itemId:item.id,name:item.name,emoji:item.emoji,qty:S.specQty,price:item.price,specsStr,note:S.specNote};
-  closeSpec();render();toast('已加入清單 ✓','ok');
-}
-function closeSpec(){document.getElementById('specOverlay').style.display='none';}
-
-/* ── SUBMIT ── */
-async function submitOrder(){
-  const ev=S.events.find(e=>e.id===S.activeEventId);
-  if(isEventClosed(ev)){toast('此場次已截止','err');return;}
-  const nameEl=document.getElementById('uName');
-  S.myName=nameEl?.value.trim()||S.myName;
-  S.myClass='同仁';
-  if(!S.myName){toast('請輸入姓名','err');return;}
-  const cartKeys=Object.keys(S.cart);
-  if(!cartKeys.length){toast('請至少選一項','err');return;}
-  const noteEl=document.getElementById('orderNote');
-  const total=cartKeys.reduce((s,k)=>s+S.cart[k].price*S.cart[k].qty,0);
-  const orderPayload={menu_id:S.activeEventId,user_name:S.myName,class_name:S.myClass,note:noteEl?.value.trim()||'',total};
-  const itemsPayload=cartKeys.map(k=>{const ci=S.cart[k];return{item_id:ci.itemId,item_name:ci.name,item_emoji:ci.emoji,quantity:ci.qty,unit_price:ci.price,specs_str:ci.specsStr,note:ci.note};});
-  document.getElementById('subBtn').disabled=true;
-  const{error}=await dbInsertOrder(orderPayload,itemsPayload);
-  if(error){toast('送出失敗：'+error.message,'err');document.getElementById('subBtn').disabled=false;return;}
-  S.cart={};
-  toast(`✅ ${S.myName} 點餐送出！`,'ok');
-  render();
-}
-
-/* ═══ RECORDS ═══ */
-function renderRec(){
-  let html=`<div class="id-card" style="margin-bottom:14px">
-    <div class="fld"><label>查詢姓名</label><input class="inp" id="qName" placeholder="輸入姓名" value="${esc(S.myName)}"></div>
-    <div class="fld"><label>班級</label>
-      <select class="sel" id="qClass"><option value="">所有班級</option>
-        ${CLASSES.map(c=>`<option value="${c}"${S.myClass===c?' selected':''}>${c}</option>`).join('')}
-      </select>
-    </div>
-    <button class="btn btn-or" onclick="doQuery()">查詢</button>
-  </div>`;
-  if(S.myRecs===null) return html+'<div class="empty"><span class="ei">🔍</span><p>輸入姓名查詢點餐紀錄</p></div>';
-  if(!S.myRecs.length) return html+'<div class="empty"><span class="ei">📭</span><p>查無紀錄</p></div>';
-  S.myRecs.forEach(({ev,o})=>{
-    const isC=S.delId===o.id;
-    html+=`<div class="rec-card">
-      ${isC?`<div class="del-cfm"><p>確定要取消此筆？</p><div class="del-cfm-btns"><button class="dcb-k" onclick="S.delId=null;render()">保留</button><button class="dcb-d" onclick="doDelete('${o.id}','${ev.id}')">確認取消</button></div></div>`
-           :`<button class="rec-del" onclick="S.delId='${o.id}';render()">✕</button>`}
-      <div class="rec-top">
-        <div>
-          <div class="rec-title">${esc(ev.title)}</div>
-          <div class="rec-organizer">${ev.organizer?`承辦：${esc(ev.organizer)}　`:''}${esc(o.class_name)} · ${fmtTime(o.created_at)}</div>
-        </div>
-        <span class="rec-badge">已登記</span>
-      </div>
-      <div class="rec-lines">${(o.order_items||[]).map(oi=>`${esc(oi.item_emoji)} ${esc(oi.item_name)}${oi.specs_str?` (${esc(oi.specs_str)})`:''} × ${oi.quantity}${oi.note?` — ${esc(oi.note)}`:''}`).join('<br>')}</div>
-      ${o.note?`<div style="font-size:.72rem;color:var(--sll);margin-bottom:6px">備註：${esc(o.note)}</div>`:''}
-      <div class="rec-foot"><span>合計</span><span class="rec-price">${o.total>0?'$'+o.total:'（詢價）'}</span></div>
-    </div>`;
-  });
-  return html;
-}
-function doQuery(){
-  const name=document.getElementById('qName')?.value.trim()||'';
-  const cls=document.getElementById('qClass')?.value||'';
-  S.myName=name; S.myClass=cls;
-  const results=[];
-  S.events.forEach(ev=>{
-    const ords=S.orders[ev.id]||[];
-    ords.forEach(o=>{
-      if(name&&!o.user_name.includes(name)) return;
-      if(cls&&o.class_name!==cls) return;
-      results.push({ev,o});
-    });
-  });
-  S.myRecs=results; render();
-}
-async function doDelete(id,menuId){
-  const{error}=await dbDeleteOrder(id,menuId);
-  if(error){toast('刪除失敗','err');return;}
-  S.delId=null;
-  S.myRecs=(S.myRecs||[]).filter(r=>r.o.id!==id);
-  toast('已取消點餐紀錄','ok'); render();
-}
-
-/* ═══ ADMIN ═══ */
-function renderAdmin(){
-  if(!S.adminEid&&S.events.length) S.adminEid=S.events[0].id;
-  const ev=S.events.find(e=>e.id===S.adminEid);
-  const ords=S.orders[S.adminEid]||[];
-
-  // kitchen
-  const kitch={};
-  ords.forEach(o=>(o.order_items||[]).forEach(oi=>{
-    const k=oi.item_name+(oi.specs_str?'__'+oi.specs_str:'');
-    if(!kitch[k])kitch[k]={emoji:oi.item_emoji,name:oi.item_name,specs:oi.specs_str,qty:0,price:oi.unit_price};
-    kitch[k].qty+=oi.quantity;
-  }));
-  const krows=Object.values(kitch).sort((a,b)=>b.qty-a.qty);
-  const totPort=krows.reduce((s,r)=>s+r.qty,0);
-  const totAmt=krows.reduce((s,r)=>s+r.qty*r.price,0);
-
-  let html=`
-    <!-- 場次切換 -->
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:13px;align-items:center">
-      ${S.events.map(e=>`<button class="btn ${S.adminEid===e.id?'btn-or':'btn-out'}" style="padding:8px 16px;font-size:.85rem"
-        onclick="S.adminEid='${e.id}';render()">${esc(e.title)}</button>`).join('')}
-    </div>`;
-
-  if(!ev){ html+='<div class="empty"><span class="ei">📭</span><p>請先建立場次</p></div>'; return html; }
-
-  html+=`
-    <div class="stat-grid">
-      <div class="stat-box"><div class="stat-n" style="color:var(--or)">${ords.length}</div><div class="stat-l">筆點餐</div></div>
-      <div class="stat-box"><div class="stat-n" style="color:var(--gr)">${totPort}</div><div class="stat-l">總份數</div></div>
-      <div class="stat-box"><div class="stat-n" style="color:var(--am)">${totAmt>0?'$'+totAmt:'—'}</div><div class="stat-l">總金額</div></div>
-      <div class="stat-box"><div class="stat-n" style="color:var(--slm)">${new Set(ords.map(o=>o.class_name)).size}</div><div class="stat-l">班級數</div></div>
-    </div>
-    <div class="exp-row">
-      <button class="exp-btn" onclick="exportCSV()">📥 匯出CSV</button>
-    </div>
-  `;
-
-  // 所有點餐
-  html+=`<div class="panel"><div class="panel-head"><div class="panel-title">📋 點餐紀錄</div>
-    <button class="btn btn-rd btn-sm" onclick="if(confirm('確定清空所有訂單？'))clearOrders()">清空</button>
-  </div><div style="overflow-x:auto"><table class="atbl">
-    <thead><tr><th>時間</th><th>班級</th><th>姓名</th><th>品項</th><th>合計</th><th></th></tr></thead><tbody>`;
-  if(!ords.length) html+='<tr><td colspan="6" style="text-align:center;color:var(--sll);padding:20px">尚無紀錄</td></tr>';
-  else ords.forEach(o=>{
-    const summ=(o.order_items||[]).map(oi=>`${oi.item_emoji}${oi.item_name}×${oi.quantity}`).join('、');
-    html+=`<tr><td>${fmtTime(o.created_at)}</td><td>${esc(o.class_name)}</td><td><strong>${esc(o.user_name)}</strong></td><td style="font-size:.75rem">${esc(summ)}</td><td style="font-weight:700;color:var(--or)">${o.total>0?'$'+o.total:'—'}</td>
-      <td><button class="btn btn-rd btn-sm" onclick="if(confirm('刪除？'))delOrder('${o.id}','${ev.id}')">刪</button></td></tr>`;
-  });
-  html+='</tbody></table></div></div>';
-
-  // 場次 + 菜單管理
-
-  // 設定
-
-  return html;
-}
-
-/* 場次 & 菜單管理 */
-
-function renderMenuTab(){
-  if(!S.adminEid&&S.events.length) S.adminEid=S.events[0].id;
-  const ev=S.events.find(e=>e.id===S.adminEid);
-
-  let html=`
-    <!-- 場次切換 -->
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:13px;align-items:center">
-      ${S.events.map(e=>`<button class="btn ${S.adminEid===e.id?'btn-or':'btn-out'}" style="padding:8px 16px;font-size:.85rem"
-        onclick="S.adminEid='${e.id}';S.pendingItems=[];render()">${esc(e.title)}</button>`).join('')}
-      <button class="btn btn-out btn-sm" onclick="createNewEvent()">＋ 新增場次</button>
-    </div>`;
-
-  if(!ev){
-    html+='<div class="empty"><span class="ei">📭</span><p>請先建立場次</p></div>';
-    return html;
-  }
-
-  html+=renderEventMgmt(ev);
-  return html;
-}
-
-function renderEventMgmt(ev){
-  const items=S.pendingItems; // 後台只顯示本次解析的暫存品項
-  return `<div class="panel"><div class="panel-head">
-    <div class="panel-title">✏️ 場次設定 & 菜單管理</div>
-    <button class="btn btn-or btn-sm" onclick="addItem()">＋ 品項</button>
-    <button class="btn btn-out btn-sm" onclick="showMenuCache()">📂 歷史菜單</button>
-  </div><div class="panel-body">
-
-    <!-- 場次基本資訊 -->
-    <div class="ev-mgmt-grid" style="margin-bottom:10px">
-      <div><span class="mg-lbl">場次標題</span><input class="mg-inp" id="evTitle" value="${esc(ev.title||'')}"></div>
-      <div><span class="mg-lbl">店家名稱</span><input class="mg-inp" id="evStore" placeholder="例：MaMa手作飯盒" value="${esc(ev.store_name||'')}"></div>
-    </div>
-    <div style="margin-bottom:10px">
-      <span class="mg-lbl" style="display:block;margin-bottom:6px">承辦人</span>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-        ${['雨欣','微姍','梅青','曉臻','心榆','望謙'].map(n=>'<button class="btn '+(ev.organizer===n?'btn-or':'btn-out')+'" style="padding:8px 18px;font-size:.9rem;font-weight:700" onclick="pickOrganizer(this,\''+n+'\')">'+n+'</button>').join('')}
-        <input class="mg-inp" id="evOrganizer" placeholder="其他姓名" value="${(['雨欣','微姍','梅青','曉臻','心榆','望謙'].includes(ev.organizer)?'':ev.organizer)||''}" style="width:90px">
-      </div>
-    </div>
-
-
-    <!-- 圖片 + AI -->
-    <div style="margin-bottom:13px">
-      <span class="mg-lbl">菜單圖片（上傳後 AI 自動解析品項）</span>
-      <div class="upload-zone" onclick="document.getElementById('imgInp').click()">
-        <input type="file" id="imgInp" accept="image/*,application/pdf" style="display:none" onchange="handleImg(event)">
-        ${ev.img_url
-          ?`<img src="${ev.img_url}" class="menu-preview-img" alt="菜單"><div style="margin-top:6px;font-size:.72rem;color:var(--in)">點擊更換圖片/PDF</div>`
-          :`<span style="font-size:1.8rem;display:block;margin-bottom:6px">📎</span><div style="font-weight:700;font-size:.88rem;color:var(--slm)">點擊上傳菜單圖片或 PDF</div><div class="upload-sub">JPG / PNG / PDF · AI 自動解析品項並分類</div>`}
-      </div>
-      <div id="aiStatus"></div>
-    </div>
-
-    <!-- 品項列表 -->
-    <!-- 已儲存品項摘要 -->
-    ${(()=>{
-      const saved=S.items[S.adminEid]||[];
-      if(!saved.length) return '';
-      const cats=[...new Set(saved.map(i=>i.category||'其他'))];
-      return '<div style="background:var(--grl);border-radius:var(--rsm);padding:8px 12px;margin-bottom:10px;font-size:.78rem;color:var(--gr)">'
-        +'✅ 已儲存 '+saved.length+' 個品項（'+cats.join('、')+'）'
-        +'<button onclick="if(confirm(\'確定清空此場次所有品項？\'))clearItems()" style="float:right;font-size:.7rem;color:var(--rd);background:none;border:none;cursor:pointer">清空</button>'
-        +'</div>';
-    })()}
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-      <span class="mg-lbl">${S.pendingItems.length?'本次解析品項（確認後按儲存）':'尚未解析品項'}</span>
-      ${S.pendingItems.length?'<button class="btn btn-out btn-sm" onclick="clearPending()">✕ 清除解析</button>':''}
-    </div>
-    <div id="mgmtItems">
-      ${items.map((it,i)=>`<div class="mgmt-item-row" style="flex-wrap:wrap">
-        <input class="mg-inp mi-em" value="${esc(it.emoji)}" id="me-${i}" placeholder="🍱">
-        <select class="mg-inp" id="mc-${i}" style="width:80px">
-          ${['便當','飲料','點心','其他'].map(c=>`<option value="${c}"${(it.category||'其他')===c?' selected':''}>${c}</option>`).join('')}
-        </select>
-        <input class="mg-inp mi-rest" value="${esc(it.restaurant)}" id="mr-${i}" placeholder="店家">
-        <input class="mg-inp mi-name" value="${esc(it.name)}" id="mn-${i}" placeholder="品項名稱">
-        <input class="mg-inp mi-price" type="number" value="${it.price}" id="mp-${i}" placeholder="價格">
-        <button class="btn btn-rd btn-sm" onclick="removeItem(${i})">刪</button>
-      </div>`).join('')}
-    </div>
-    <div style="display:flex;gap:7px;margin-top:9px;flex-wrap:wrap">
-      <button class="btn btn-or" onclick="saveAll()">💾 儲存</button>
-      <button class="btn btn-rd btn-sm" onclick="if(confirm('確定刪除整個場次？所有訂單和品項也會一併刪除。'))deleteEvent('${ev.id}')">🗑️ 刪除場次</button>
-    </div>
-  </div></div>`;
-}
-
-/* ── ADMIN OPS ── */
-async function createNewEvent(){
-  if(DEMO){toast('示範模式','warn');return;}
-  const{data,error}=await sb.from('menus').insert({title:'新場次',deadline:'11:30',organizer:'',store_name:'',date:new Date().toISOString().slice(0,10)}).select().single();
-  if(error){toast('建立失敗','err');return;}
-  S.events.push(data); S.items[data.id]=[]; S.orders[data.id]=[];
-  S.adminEid=data.id; render(); toast('場次已建立','ok');
-}
-function showMenuCache(){
-  const stored=JSON.parse(localStorage.getItem('menuCache')||'[]');
-  // 合併預設菜單（不重複）
-  const presetStores=PRESET_MENUS.map(p=>p.store);
-  const extra=stored.filter(s=>!presetStores.includes(s.store));
-  const cached=[...PRESET_MENUS,...extra];
-  if(!cached.length){toast('尚無歷史菜單紀錄','warn');return;}
-  // 建立選單覆蓋層
-  const overlay=document.createElement('div');
-  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px';
-  const inner=document.createElement('div');
-  inner.style.cssText='background:#fff;border-radius:16px;padding:22px;max-width:360px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2)';
-  inner.innerHTML='<div style="font-family:Nunito,sans-serif;font-weight:800;font-size:1rem;margin-bottom:12px">📂 選擇歷史菜單</div>'
-    +'<div id="cacheList" style="display:flex;flex-direction:column;gap:7px;max-height:300px;overflow-y:auto">'
-    +cached.map((c,i)=>'<button data-idx="'+i+'" style="text-align:left;padding:10px 13px;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;cursor:pointer;font-family:inherit;width:100%">'
-      +'<div style="font-weight:700;font-size:.88rem">'+(c.store||'未知店家')+'</div>'
-      +'<div style="font-size:.72rem;color:#94a3b8">'+c.items.length+' 個品項 · '+(c.savedAt||'')+'</div>'
-      +'</button>').join('')
-    +'</div>'
-    +'<button id="cacheCancelBtn" style="margin-top:12px;width:100%;padding:9px;border:1.5px solid #e2e8f0;border-radius:8px;background:#f8f7f4;cursor:pointer;font-family:inherit;font-weight:700">取消</button>';
-  overlay.appendChild(inner);
-  // 事件委派
-  inner.querySelector('#cacheList').addEventListener('click',e=>{
-    const btn=e.target.closest('button[data-idx]');
-    if(btn){ loadCachedMenu(Number(btn.dataset.idx)); }
-  });
-  inner.querySelector('#cacheCancelBtn').addEventListener('click',()=>overlay.remove());
-  overlay.addEventListener('click',e=>{ if(e.target===overlay) overlay.remove(); });
-  document.body.appendChild(overlay);
-  window._cacheOverlay=overlay;
-}
-
-function loadCachedMenu(idx){
-  // 與 showMenuCache 相同邏輯：合併預設菜單 + localStorage
-  const stored=JSON.parse(localStorage.getItem('menuCache')||'[]');
-  const presetStores=PRESET_MENUS.map(p=>p.store);
-  const extra=stored.filter(s=>!presetStores.includes(s.store));
-  const cached=[...PRESET_MENUS,...extra];
-  const entry=cached[idx];
-  if(!entry) return;
-  // 載入到 pendingItems，讓管理員確認後儲存
-  const eid=S.adminEid;
-  S.pendingItems=entry.items.map((it,i)=>({...it,id:'cache-'+Date.now()+'-'+i,menu_id:eid,ai_parsed:false}));
-  if(window._cacheOverlay){ window._cacheOverlay.remove(); window._cacheOverlay=null; }
-  toast('已載入「'+entry.store+'」菜單，確認後按💾儲存','ok');
-  render();
-}
-
-function pickOrganizer(btn, name){
-  // 更新 state
-  const ev=S.events.find(e=>e.id===S.adminEid);
-  if(ev) ev.organizer=name;
-  // 直接更新 DOM，不 render() 避免重置 input
-  const inp=document.getElementById('evOrganizer');
-  if(inp) inp.value='';
-  // 更新按鈕樣式
-  const btns=btn.parentElement.querySelectorAll('button');
-  btns.forEach(b=>{
-    b.className='btn btn-sm '+(b.textContent.trim()===name?'btn-or':'btn-out');
-  });
-}
-function setOrganizer(eid,name){
-  const ev=S.events.find(e=>e.id===eid);
-  if(ev) ev.organizer=name;
-  render();
-}
-
-async function toggleClose(eid){
-  const ev=S.events.find(e=>e.id===eid); if(!ev) return;
-  const next=!ev.is_closed;
-  if(DEMO){ev.is_closed=next;toast(next?'已關閉':'已開放',next?'warn':'ok');render();return;}
-  await sb.from('menus').update({is_closed:next}).eq('id',eid);
-  ev.is_closed=next; toast(next?'場次已關閉':'場次已開放',next?'warn':'ok'); render();
-}
-async function deleteEvent(eid){
-  if(DEMO){S.events=S.events.filter(e=>e.id!==eid);delete S.items[eid];delete S.orders[eid];S.adminEid=S.events[0]?.id||null;S.pendingItems=[];toast('已刪除','ok');render();return;}
+async function renderHist(){
+  const wrap = document.getElementById('hist-wrap');
+  const exportBtn = document.getElementById('hist-export-btn');
+  wrap.innerHTML='<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">載入中…</div>';
+  exportBtn.style.display='none';
   try{
-    // 抓所有訂單 ID
-    const {data:ords}=await sb.from('orders').select('id').eq('menu_id',eid);
-    const orderIds=(ords||[]).map(o=>o.id);
-    // 逐一刪除（避免空陣列 .in() 報錯）
-    for(const oid of orderIds){
-      await sb.from('order_items').delete().eq('order_id',oid);
-    }
-    if(orderIds.length) await sb.from('orders').delete().eq('menu_id',eid);
-    await sb.from('menu_items').delete().eq('menu_id',eid);
-    const{error}=await sb.from('menus').delete().eq('id',eid);
-    if(error) throw new Error(error.message);
-  }catch(err){
-    toast('刪除失敗：'+err.message,'err'); return;
-  }
-  S.events=S.events.filter(e=>e.id!==eid);
-  delete S.items[eid]; delete S.orders[eid];
-  S.pendingItems=[];
-  S.adminEid=S.events[0]?.id||null;
-  toast('場次已刪除','ok'); render();
-}
-
-// 清除本次解析資料（不刪資料庫，只清暫存）
-function clearPending(){
-  S.pendingItems=[];
-  toast('已清除解析資料','ok');
-  render();
-}
-async function delOrder(id,eid){
-  const{error}=await dbDeleteOrder(id,eid);
-  if(error){toast('刪除失敗','err');return;}
-  toast('已刪除','ok'); render();
-}
-async function clearItems(){
-  const eid=S.adminEid; if(!eid) return;
-  if(DEMO){S.items[eid]=[];toast('已清空','ok');render();return;}
-  const{error}=await sb.from('menu_items').delete().eq('menu_id',eid);
-  if(error){toast('清空失敗','err');return;}
-  S.items[eid]=[];S.pendingItems=[];
-  toast('已清空此場次所有品項','ok');render();
-}
-
-async function clearOrders(){
-  const ids=(S.orders[S.adminEid]||[]).map(o=>o.id);
-  if(!ids.length) return;
-  if(DEMO){S.orders[S.adminEid]=[];toast('已清空','ok');render();return;}
-  await sb.from('orders').delete().in('id',ids);
-  S.orders[S.adminEid]=[]; toast('訂單已清空','ok'); render();
-}
-
-/* ── ITEM OPS ── */
-function addItem(){
-  S.pendingItems.push({id:'new-'+Date.now(),menu_id:S.adminEid||'',restaurant:'',emoji:'🍱',name:'',description:'',price:0,specs:[],sort_order:S.pendingItems.length,ai_parsed:false,category:'其他'});
-  render();
-}
-function removeItem(i){ S.pendingItems.splice(i,1); render(); }
-async function saveMenu(){
-  const eid=S.adminEid; if(!eid){toast('請先選擇場次','err');return;}
-  if(DEMO){toast('示範模式：變更不會寫入','warn');return;}
-  await sb.from('menu_items').delete().eq('menu_id',eid);
-  const items=(S.items[eid]||[]).map((it,i)=>({
-    emoji:document.getElementById('me-'+i)?.value||it.emoji,
-    category:document.getElementById('mc-'+i)?.value||it.category||'其他',
-    restaurant:document.getElementById('mr-'+i)?.value||it.restaurant,
-    name:document.getElementById('mn-'+i)?.value||it.name,
-    price:+(document.getElementById('mp-'+i)?.value)||it.price,
-    description:it.description||'',specs:it.specs||[],sort_order:i,ai_parsed:it.ai_parsed||false,menu_id:eid
-  }));
-  if(items.length){ const{error}=await sb.from('menu_items').insert(items); if(error){toast('儲存失敗：'+error.message,'err');return;} }
-  await loadEventDetail(eid);
-  toast('菜單已儲存 ✓','ok'); render();
-}
-async function saveAll(){
-  const eid=S.adminEid; if(!eid){toast('請先選擇場次','err');return;}
-  if(DEMO){toast('示範模式：變更不會寫入','warn');return;}
-
-  // 儲存場次基本資訊
-  const title=document.getElementById('evTitle')?.value.trim();
-  const store_name=document.getElementById('evStore')?.value.trim()||'';
-  const orgInput=document.getElementById('evOrganizer')?.value.trim()||'';
-  const evNow=S.events.find(e=>e.id===eid);
-  const organizer=orgInput||evNow?.organizer||'';
-  if(!title){toast('請填場次標題','err');return;}
-
-  const{error:e1}=await sb.from('menus').update({title,organizer,store_name}).eq('id',eid);
-  if(e1){toast('儲存失敗：'+e1.message,'err');return;}
-  const ev=S.events.find(e=>e.id===eid);
-  if(evNow) Object.assign(evNow,{title,organizer,store_name});
-
-  // 把 pendingItems 讀取欄位後 append 到資料庫（不刪除既有品項）
-  const existingCount=(S.items[eid]||[]).length;
-  const newItems=S.pendingItems.map((it,i)=>({
-    emoji:document.getElementById('me-'+i)?.value||it.emoji,
-    category:document.getElementById('mc-'+i)?.value||it.category||'其他',
-    restaurant:document.getElementById('mr-'+i)?.value||it.restaurant,
-    name:document.getElementById('mn-'+i)?.value||it.name,
-    price:+(document.getElementById('mp-'+i)?.value)||it.price,
-    description:it.description||'',
-    specs:it.specs||[],
-    sort_order:existingCount+i,
-    ai_parsed:true,
-    menu_id:eid
-  }));
-
-  if(newItems.length){
-    const{error:e2}=await sb.from('menu_items').insert(newItems);
-    if(e2){toast('品項儲存失敗：'+e2.message,'err');return;}
-    S.pendingItems=[];
-    await loadEventDetail(eid);
-    const total=(S.items[eid]||[]).length;
-    // 快取到 localStorage
-    try{
-      const cached=JSON.parse(localStorage.getItem('menuCache')||'[]');
-      const existing=cached.findIndex(c=>c.store===evNow?.store_name);
-      const entry={store:evNow?.store_name||'未知店家',items:S.items[eid],savedAt:new Date().toLocaleDateString('zh-TW')};
-      if(existing>=0) cached[existing]=entry; else cached.unshift(entry);
-      localStorage.setItem('menuCache',JSON.stringify(cached.slice(0,10)));
-    }catch(e){}
-    toast('✅ 已儲存！場次共 '+total+' 個品項','ok');
-  } else {
-    toast('✅ 場次資訊已儲存','ok');
-  }
-  render();
-}
-
-
-/* ── IMAGE + AI ── */
-async function handleImg(event){
-  const file=event.target.files[0]; if(!file) return;
-  const isPdf=file.type==='application/pdf'||file.name.toLowerCase().endsWith('.pdf');
-  const zone=document.querySelector('.upload-zone');
-  // 每次上傳前完整重置
-  S.pendingItems=[];
-  const statusEl=document.getElementById('aiStatus');
-  if(statusEl) statusEl.innerHTML='';
-  if(zone) zone.innerHTML=`<div class="scan-ldr"><div class="spin"></div>${isPdf?'PDF 轉換中…':'圖片載入中…'}</div>`;
-  if(isPdf){
-    // PDF 用 PDF.js 轉換第一頁為圖片
-    await aiParsePdf(file);
-    return;
-  }
-  const reader=new FileReader();
-  reader.onload=e=>{
-    if(zone) zone.innerHTML=`<img src="${e.target.result}" class="menu-preview-img"><div style="margin-top:6px;font-size:.72rem;color:var(--in)">點擊更換圖片/PDF</div><input type="file" id="imgInp" accept="image/*,application/pdf" style="display:none" onchange="handleImg(event)">`;
-  };
-  reader.readAsDataURL(file);
-  if(!DEMO){
-    const eid=S.adminEid;
-    const ext=file.name.split('.').pop();
-    const path=`menus/${eid}_${Date.now()}.${ext}`;
-    try{
-      const{error:serr}=await sb.storage.from('menu-images').upload(path,file,{upsert:true});
-      if(!serr){
-        const{data:pub}=sb.storage.from('menu-images').getPublicUrl(path);
-        await sb.from('menus').update({img_url:pub.publicUrl}).eq('id',eid);
-        const ev=S.events.find(e=>e.id===eid); if(ev) ev.img_url=pub.publicUrl;
-      }
-    }catch(e){ console.warn('Storage upload skipped:', e.message); }
-  }
-  await aiParse(file);
-}
-async function aiParsePdf(file){
-  const statusEl=document.getElementById('aiStatus');
-  if(statusEl) statusEl.innerHTML=`<div class="scan-ldr"><div class="spin"></div>PDF 解析中，請稍候…</div>`;
-  try{
-    // 用 PDF.js 把第一頁渲染成 canvas
-    const pdfjsLib=window['pdfjs-dist/build/pdf'];
-    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    const arrayBuffer=await file.arrayBuffer();
-    const pdf=await pdfjsLib.getDocument({data:arrayBuffer}).promise;
-    const page=await pdf.getPage(1);
-    const viewport=page.getViewport({scale:2.0});
-    const canvas=document.createElement('canvas');
-    canvas.width=viewport.width; canvas.height=viewport.height;
-    await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
-    // 壓縮成 jpeg
-    const MAX=1000;
-    let w=canvas.width,h=canvas.height;
-    if(w>MAX||h>MAX){
-      const out=document.createElement('canvas');
-      if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}
-      out.width=w;out.height=h;
-      out.getContext('2d').drawImage(canvas,0,0,w,h);
-      const base64=out.toDataURL('image/jpeg',0.72).split(',')[1];
-      // 更新預覽
-      const zone=document.querySelector('.upload-zone');
-      if(zone) zone.innerHTML=`<img src="data:image/jpeg;base64,${base64}" class="menu-preview-img"><div style="margin-top:6px;font-size:.72rem;color:var(--in)">點擊更換圖片/PDF</div><input type="file" id="imgInp" accept="image/*,application/pdf" style="display:none" onchange="handleImg(event)">`;
-      await aiParseBase64(base64,'image/jpeg');
-    } else {
-      const base64=canvas.toDataURL('image/jpeg',0.72).split(',')[1];
-      const zone=document.querySelector('.upload-zone');
-      if(zone) zone.innerHTML=`<img src="data:image/jpeg;base64,${base64}" class="menu-preview-img"><div style="margin-top:6px;font-size:.72rem;color:var(--in)">點擊更換圖片/PDF</div><input type="file" id="imgInp" accept="image/*,application/pdf" style="display:none" onchange="handleImg(event)">`;
-      await aiParseBase64(base64,'image/jpeg');
-    }
-  }catch(err){
-    console.error(err);
-    const statusEl=document.getElementById('aiStatus');
-    if(statusEl) statusEl.innerHTML=`<div style="font-size:.75rem;color:var(--rd);margin-top:7px">❌ PDF 解析失敗：${err.message}</div>`;
-    toast('PDF 解析失敗，請改用圖片格式','err');
-  }
-}
-
-async function aiParse(file){
-  const base64=await toBase64(file);
-  await aiParseBase64(base64,'image/jpeg');
-}
-
-async function aiParseBase64(base64,mime){
-  const statusEl=document.getElementById('aiStatus');
-  if(statusEl) statusEl.innerHTML=`<div class="scan-ldr"><div class="spin"></div>AI 正在解析菜單，請稍候…</div>`;
-  try{
-    const proxyUrl=window._cfPages?'/claude-proxy':'/.netlify/functions/claude-proxy';
-    const res=await fetch(proxyUrl,{method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({messages:[{role:'user',content:[
-        {type:'image',source:{type:'base64',media_type:mime,data:base64}},
-        {type:'text',text:'請解析這張菜單圖片（可能是圖片或PDF截圖），只回傳純 JSON 陣列，絕對不要有任何其他文字、說明或 markdown code block：\n[{"restaurant":"店家名稱","category":"便當","emoji":"最適合的emoji","name":"品項名稱","price":數字或0,"description":"簡短描述或空字串"}]\ncategory 只能填：便當、飲料、點心、其他。飲料品項請合併中杯/大杯為同一筆，price 填中杯價格，specs 填 [{"cat":"杯型","opts":["中杯","大杯"]}]，description 填中杯價/大杯價（例如 "40/45"）。嚴格要求：只列出菜單圖片上明確可見的品項，看不清楚的文字絕對不要猜測或自行補充，寧可少列也不要列出菜單上沒有的品項。忽略加料區和優惠說明。確保 JSON 完整不截斷。price 看不清楚填 0。無法辨識回傳 []。'}
-      ]}]})});
-    if(!res.ok) throw new Error(`API 錯誤 ${res.status}`);
-    const text=await res.text();
-    let d;
-    try{ d=JSON.parse(text); }
-    catch(e){ throw new Error('伺服器回應格式錯誤：'+text.slice(0,120)); }
-    let raw=(d.content?.[0]?.text||'[]').trim();
-    // 清除所有 markdown 包裝
-    raw=raw.replace(/^```json\s*/i,'').replace(/^```\s*/,'').replace(/\s*```\s*$/,'').trim();
-    if(raw.toLowerCase().startsWith('json')) raw=raw.slice(4).trim();
-    // 如果 JSON 被截斷，嘗試修復（補上結尾的 ]）
-    if(!raw.endsWith(']')){
-      const lastComma=raw.lastIndexOf(',');
-      const lastBrace=raw.lastIndexOf('}');
-      if(lastBrace>lastComma){
-        raw=raw.slice(0,lastBrace+1)+']';
-      } else if(lastComma>0){
-        raw=raw.slice(0,lastComma)+']';
-      } else {
-        raw='[]';
-      }
-    }
-    let parsed;
-    try{ parsed=JSON.parse(raw); }
-    catch(e){ throw new Error('菜單解析失敗，品項可能過多，請嘗試分開上傳'); }
-    if(!Array.isArray(parsed)||!parsed.length){
-      if(statusEl) statusEl.innerHTML=`<div style="font-size:.75rem;color:var(--am);margin-top:7px">⚠️ AI 無法識別，請手動新增品項</div>`;
+    const res = await fetch(`${CFG.url}/rest/v1/history?order=created_at.desc`,{headers:sbH()});
+    if(!res.ok) throw new Error(await res.text());
+    const hist = await res.json();
+    _histData = hist;
+    if(!hist.length){
+      wrap.innerHTML='<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">尚無參加記錄<br><small style="font-size:11px">前台報名後會自動記錄於此</small></div>';
       return;
     }
-    const eid=S.adminEid;
-    if(!S.items[eid]) S.items[eid]=[];
-    const newItems=parsed
-      .filter(it=>it&&it.name)  // 過濾掉不完整的品項
-      .map((it,i)=>({
-        id:'ai-'+Date.now()+'-'+i,
-        menu_id:eid,
-        restaurant:it.restaurant||'本日菜單',
-        category:it.category||'其他',
-        emoji:it.emoji||'🍱',
-        name:it.name||'未知品項',
-        description:it.description||'',
-        price:Number(it.price)||0,
-        specs:[],
-        sort_order:S.items[eid].length+i,
-        ai_parsed:true
-      }));
-    // 每次解析先清空暫存，只顯示本次的
-    S.pendingItems=newItems;
-    const cats=[...new Set(newItems.map(i=>i.category))].join('、');
-    if(statusEl) statusEl.innerHTML=`<div style="font-size:.75rem;color:var(--gr);margin-top:7px">✅ 解析完成 ${newItems.length} 個品項（${cats}），確認後按「💾 儲存」加入場次</div>`;
-    toast(`AI 解析完成！${newItems.length} 個品項`,'ok');
-    render();
-  }catch(err){
-    console.error(err);
-    if(statusEl) statusEl.innerHTML=`<div style="font-size:.75rem;color:var(--rd);margin-top:7px">❌ 解析失敗：${err.message}</div>`;
-    toast('AI 解析失敗：'+err.message,'err');
+    exportBtn.style.display='flex';
+    const titles = [...new Map(hist.map(h=>[h.act_id, {title:h.act_title, org:h.act_org}])).entries()];
+    wrap.innerHTML = titles.map(([actId, info])=>{
+      const actHist = hist.filter(h=>h.act_id===actId);
+      const sessions = [...new Map(actHist.map(h=>[h.sess_date+'||'+h.sess_time, {date:h.sess_date, time:h.sess_time}])).entries()];
+      const sessSections = sessions.map(([sk, sess])=>{
+        const sessHist = actHist.filter(h=>h.sess_date===sess.date&&h.sess_time===sess.time);
+        return `<div style="padding:10px 0;border-bottom:1px solid var(--line2)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <div>
+              <span style="font-size:13px;font-weight:500;color:var(--blue)">${sess.date}</span>
+              <span style="font-size:12px;color:var(--ink3);margin-left:8px">${sess.time}</span>
+            </div>
+            <span style="font-size:11px;background:var(--blue-lt);color:var(--blue);padding:2px 8px;border-radius:99px">${sessHist.length} 人</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${sessHist.map(h=>`<span style="display:inline-flex;align-items:center;gap:5px;background:var(--line2);border:1px solid var(--line);border-radius:99px;padding:3px 10px;font-size:12px;color:var(--ink2)">${h.name}</span>`).join('')}
+          </div>
+        </div>`;
+      }).join('');
+      const createdAt = actHist[0]?.created_at ? new Date(actHist[0].created_at) : null;
+      const dateStr = createdAt ? `${createdAt.getMonth()+1}/${createdAt.getDate()} 記錄` : '';
+      const safeActId = actId.replace(/'/g,"\\'");
+      return `<div style="margin-bottom:16px;background:var(--white);border:1px solid var(--line);border-radius:12px;overflow:hidden">
+        <div style="background:var(--line2);padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:14px;font-weight:500;color:var(--navy)">${info.title}</div>
+            <div style="font-size:12px;color:var(--ink3);margin-top:2px">${info.org}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="text-align:right">
+              <div style="font-size:12px;font-weight:500;color:var(--ink3)">${actHist.length} 筆記錄</div>
+              <div style="font-size:11px;color:var(--ink3);margin-top:2px">${dateStr}</div>
+            </div>
+            <button onclick="deleteHistAct('${safeActId}')" title="刪除此活動所有記錄"
+              style="background:none;border:1px solid #f0b8b8;border-radius:7px;cursor:pointer;color:var(--red);padding:5px 10px;font-size:11px;font-family:'Noto Sans TC',sans-serif;white-space:nowrap;transition:all .14s"
+              onmouseover="this.style.background='var(--red-lt)'" onmouseout="this.style.background='none'">
+              刪除
+            </button>
+          </div>
+        </div>
+        <div style="padding:0 16px">${sessSections}</div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    wrap.innerHTML=`<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">載入失敗：${e.message}<br><small>請確認 Supabase history 資料表已建立並開放權限</small></div>`;
   }
 }
-function toBase64(file){
-  return new Promise((resolve,reject)=>{
-    const img=new Image();
-    const url=URL.createObjectURL(file);
-    img.onload=()=>{
-      URL.revokeObjectURL(url);
-      const canvas=document.createElement('canvas');
-      const MAX=850;
-      let w=img.width,h=img.height;
-      if(w>MAX||h>MAX){
-        if(w>h){h=Math.round(h*MAX/w);w=MAX;}
-        else{w=Math.round(w*MAX/h);h=MAX;}
-      }
-      canvas.width=w;canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      const dataUrl=canvas.toDataURL('image/jpeg',0.7);
-      resolve(dataUrl.split(',')[1]);
-    };
-    img.onerror=reject;
-    img.src=url;
+
+async function deleteHistAct(actId){
+  const info = _histData.find(h=>h.act_id===actId);
+  const title = info?.act_title || actId;
+  if(!confirm(`確定刪除「${title}」的所有參加記錄？此操作無法復原。`)) return;
+  try{
+    const res = await fetch(`${CFG.url}/rest/v1/history?act_id=eq.${encodeURIComponent(actId)}`,{
+      method:'DELETE',
+      headers:{...sbH(),'Prefer':'return=minimal'}
+    });
+    if(!res.ok){ const t=await res.text(); throw new Error(t); }
+    _histData = _histData.filter(h=>h.act_id!==actId);
+    toast('✓ 已刪除該活動的參加記錄');
+    renderHist();
+  }catch(e){ toast('刪除失敗：'+e.message); console.error('deleteHistAct:',e); }
+}
+
+function exportHistExcel(){
+  if(!_histData.length){ toast('尚無資料可匯出'); return; }
+  // 整理成二維陣列
+  const rows = [['活動名稱','主辦機關','場次日期','場次時間','姓名','報名時間']];
+  _histData.forEach(h=>{
+    rows.push([h.act_title||'', h.act_org||'', h.sess_date||'', h.sess_time||'', h.name||'', h.reg_time||'']);
   });
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  // 欄寬設定
+  ws['!cols'] = [
+    {wch:36},{wch:24},{wch:18},{wch:18},{wch:12},{wch:14}
+  ];
+  // 標頭粗體
+  ['A1','B1','C1','D1','E1','F1'].forEach(cell=>{
+    if(ws[cell]) ws[cell].s = {font:{bold:true}};
+  });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '參加記錄');
+  // 加總分析頁
+  const summary = [['活動名稱','主辦機關','參加人數']];
+  const actMap = new Map();
+  _histData.forEach(h=>{
+    if(!actMap.has(h.act_id)) actMap.set(h.act_id,{title:h.act_title||'',org:h.act_org||'',count:0});
+    actMap.get(h.act_id).count++;
+  });
+  actMap.forEach(v=>summary.push([v.title,v.org,v.count]));
+  const ws2 = XLSX.utils.aoa_to_sheet(summary);
+  ws2['!cols']=[{wch:36},{wch:24},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws2, '活動統計');
+  const now = new Date();
+  const fname = `參加記錄_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  toast('✓ Excel 已下載：'+fname);
 }
 
-/* ── EXPORT ── */
-function copyKitchen(){
-  const kitch={};const ords=S.orders[S.adminEid]||[];
-  ords.forEach(o=>(o.order_items||[]).forEach(oi=>{const k=oi.item_name+(oi.specs_str?'('+oi.specs_str+')':'');kitch[k]=(kitch[k]||0)+oi.quantity;}));
-  let txt='【廚房備餐清單】\n\n';
-  const ev=S.events.find(e=>e.id===S.adminEid);
-  if(ev) txt+=`場次：${ev.title}　承辦：${ev.organizer||'—'}\n\n`;
-  Object.entries(kitch).forEach(([n,q])=>txt+=`${n} × ${q}\n`);
-  txt+=`\n合計：${Object.values(kitch).reduce((s,q)=>s+q,0)} 份`;
-  copyText(txt);
+/* ══════════════════════════════════════════
+   AI 輔助填表
+══════════════════════════════════════════ */
+function toggleAiHelp(){
+  const box = document.getElementById('ai-help-box');
+  box.style.display = box.style.display==='none' ? 'block' : 'none';
 }
-function exportCSV(){
-  const ords=S.orders[S.adminEid]||[];
-  const ev=S.events.find(e=>e.id===S.adminEid);
-  const rows=[['場次','承辦','時間','班級','姓名','品項','規格','數量','單價','小計','備註']];
-  ords.forEach(o=>(o.order_items||[]).forEach((oi,i)=>{
-    rows.push([i===0?ev?.title||'':'',i===0?ev?.organizer||'':'',i===0?fmtTime(o.created_at):'',
-      i===0?o.class_name:'',i===0?o.user_name:'',
-      oi.item_emoji+oi.item_name,oi.specs_str||'',oi.quantity,oi.unit_price,oi.quantity*oi.unit_price,i===0?o.note||'':'']);
-  }));
-  dlCSV(rows,`點餐紀錄_${ev?.title||''}`);
-}
-function dlCSV(rows,name){
-  if(rows.length<=1){toast('沒有資料','warn');return;}
-  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
-  a.download=`${name}_${new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')}.csv`;a.click();toast('CSV 已匯出','ok');
-}
-function copyText(txt){try{const ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('已複製','ok');}catch(e){toast('複製失敗','err');}}
 
-/* ── UTILS ── */
-function toast(msg,type='info'){const w=document.getElementById('toastWrap');const el=document.createElement('div');el.className='toast '+type;const ic={ok:'✅',err:'❌',warn:'⚠️',info:'ℹ️'};el.innerHTML=`<span>${ic[type]||'ℹ️'}</span><span>${msg}</span>`;w.appendChild(el);setTimeout(()=>el.remove(),2800);}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function fmtTime(iso){try{return new Date(iso).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});}catch{return '';}}
+function copyPrompt(){
+  const prompt = `活動名稱：
+主辦機關：
+活動地點：
+研習時數：（如3小時）
+摘要描述：（完整條列研習內容、講師、注意事項等，每點一行，不限數量）
+標籤：（用逗號分隔，如：研習時數3hr,午餐提供）
+場次：（每場一行，格式：日期|時段，如：115/07/09（四）|13:10–16:20）`;
+  navigator.clipboard.writeText(prompt).then(()=>toast('提示詞已複製，請貼到 Claude 或 ChatGPT'));
+}
+
+function parseAndFill(){
+  const raw = document.getElementById('ai-paste').value.trim();
+  const ok  = document.getElementById('parse-result');
+  const err = document.getElementById('parse-err');
+  ok.style.display='none'; err.style.display='none';
+
+  if(!raw){ err.textContent='請先貼上 AI 整理的文字'; err.style.display='inline'; return; }
+
+  // ── 解析各欄位 ──
+  function extract(keys, text){
+    for(const key of keys){
+      const re = new RegExp(key+'[：:]\\s*(.+)', 'i');
+      const m = text.match(re);
+      if(m && m[1].trim()) return m[1].trim();
+    }
+    return '';
+  }
+
+  const name     = extract(['活動名稱','名稱','活動'], raw);
+  const org      = extract(['主辦機關','主辦單位','機關'], raw);
+  const ref      = extract(['公文字號','字號','文號'], raw);
+  const deadline = extract(['截止日期','報名截止','截止'], raw);
+  const place    = extract(['活動地點','地點','場地','舉辦地點'], raw);
+  const hours    = extract(['研習時數','時數','時間'], raw);
+  const tags     = extract(['標籤'], raw);
+
+  // 摘要：找「摘要描述」之後到「講師姓名/標籤/場次」之前的所有內容
+  let pts = [];
+  // 先找摘要區塊的起始位置
+  const ptsStart = raw.search(/(?:摘要重點|摘要描述|活動摘要)[：:]/im);
+  if(ptsStart >= 0){
+    // 找起始行結束後的內容
+    const afterLabel = raw.slice(ptsStart).replace(/^.+\n/, ''); // 去掉標題行
+    // 找結束位置（遇到講師姓名、標籤、場次就停）
+    const endMatch = afterLabel.search(/^(?:講師姓名|標籤|場次)[：:]/im);
+    const block = endMatch >= 0 ? afterLabel.slice(0, endMatch) : afterLabel;
+    pts = block.split('\n').map(s=>s.trim()).filter(Boolean);
+  }
+  // 若沒有標題，嘗試找連續條列段落
+  if(!pts.length){
+    const lines = raw.split('\n').map(s=>s.trim()).filter(Boolean);
+    const ptLines = lines.filter(l=>/^[一二三四\-\.\·\•]/.test(l)||l.length>15&&!l.includes('：'));
+    pts = ptLines.map(s=>s.replace(/^[一二三四\-\.\·\•\s]+/,'').trim());
+  }
+
+  // 場次：找「場次」後面的行，多天研習合併為一個場次
+  let dates = [];
+  const sessSection = raw.match(/場次[：:]?\s*\n([\s\S]+)$/im);
+  if(sessSection){
+    const lines = sessSection[1].split('\n').map(s=>s.trim()).filter(Boolean);
+    const parsedDates = [];
+    for(const line of lines){
+      // 格式1：【北區場次】115/09/18（五）|09:00–16:40
+      // 先嘗試擷取【...】標籤作為地點前綴
+      const areaMatch = line.match(/^【([^】]+)】(.+)/);
+      const cleanLine = areaMatch ? areaMatch[2].trim() : line;
+      const areaLabel = areaMatch ? `【${areaMatch[1]}】` : '';
+
+      const sep = cleanLine.includes('|')?'|':cleanLine.includes('｜')?'｜':null;
+      if(sep){
+        const parts = cleanLine.split(sep);
+        if(parts.length>=2) parsedDates.push({d:(areaLabel+parts[0]).trim(), t:parts[1].trim(), p:areaLabel?areaLabel+'場地':''});
+      } else {
+        const m = cleanLine.match(/^(.+?)\s+([\d０-９]{2}[:：][\d０-９]{2}[–—\-~～至到][\d０-９]{2}[:：][\d０-９]{2})/);
+        if(m) parsedDates.push({d:(areaLabel+m[1]).trim(), t:m[2].trim(), p:''});
+      }
+    }
+    // 若各場次地點不同（多區場次），直接保留各場次；同地點才合併
+    const hasMultiArea = parsedDates.some(d=>d.d.includes('】'));
+    if(!hasMultiArea && parsedDates.length > 1){
+      const firstD = parsedDates[0].d;
+      const lastD  = parsedDates[parsedDates.length-1].d;
+      const firstT = parsedDates[0].t;
+      const lastT  = parsedDates[parsedDates.length-1].t;
+      const startTime = firstT.split(/[–—\-]/)[0].trim();
+      const endTime   = lastT.split(/[–—\-]/).pop().trim();
+      dates.push({ d: `${firstD} 至 ${lastD}`, t: `${startTime}–${endTime}`, p:'' });
+    } else {
+      dates = parsedDates;
+    }
+  }
+
+  // ── 場次地點對應：把活動地點欄位中的【北區】【中區】【南區】對應到各場次 ──
+  if(place && dates.length){
+    // 把地點欄位按行切開，尋找含【...】的行
+    const placeLines = place.split('\n').map(s=>s.trim()).filter(Boolean);
+    const areaPlaceMap = {};
+    for(const pl of placeLines){
+      const m = pl.match(/^【([^】]+)】(.+)/);
+      if(m) areaPlaceMap[m[1]] = pl; // key: 北區場次, value: 【北區場次】...
+    }
+    if(Object.keys(areaPlaceMap).length){
+      dates = dates.map(dt=>{
+        const areaM = dt.d.match(/^【([^】]+)】/);
+        if(areaM && areaPlaceMap[areaM[1]]){
+          return {...dt, p: areaPlaceMap[areaM[1]]};
+        }
+        return dt;
+      });
+    }
+  }
+
+  // ── 填入欄位 ──
+  if(name) document.getElementById('act-name').value = name;
+  if(org)  document.getElementById('act-org').value  = org;
+  if(ref)  document.getElementById('act-ref').value  = ref;
+  if(deadline) document.getElementById('act-deadline').value = deadline;
+  if(place) document.getElementById('act-place').value = place;
+  if(hours) document.getElementById('act-hours').value = hours;
+  if(tags)  document.getElementById('act-tags').value  = tags;
+  // 講師資訊
+  const speakerMatch = raw.match(/講師姓名[：:][ ]*(.+)/);
+  const speakerTitleMatch = raw.match(/講師職稱[：:][ ]*(.+)/);
+  if(speakerMatch) document.getElementById('act-speaker').value = speakerMatch[1].trim();
+  if(speakerTitleMatch) document.getElementById('act-speaker-title').value = speakerTitleMatch[1].trim();
+  // 也嘗試從摘要描述中抓取「講師：XXX（職稱）」格式
+  if(!speakerMatch){
+    const inlineMatch = raw.match(/講師[：:][ ]*([^。（(]+)/);
+    if(inlineMatch) document.getElementById('act-speaker').value = inlineMatch[1].trim();
+  }
+  // speUrl
+  const speUrlMatch = raw.match(/(?:通報網|特殊教育資訊網|報名網址|報名連結)[：:][ ]*(https?:\/\/\S+)/i);
+  if(speUrlMatch) document.getElementById('act-speurl').value = speUrlMatch[1].trim();
+  if(pts.length) document.getElementById('act-pts').value = pts.join('\n');
+
+  // 場次：支援單天和跨天（含「至」格式）
+  if(dates.length){
+    const rows = document.getElementById('date-rows');
+    rows.innerHTML = '';
+    dates.forEach(dt => {
+      const div = document.createElement('div');
+      div.className='date-row';
+      // 若日期含「至」，顯示完整跨天範圍
+      div.style.cssText='flex-wrap:wrap;gap:6px';
+      div.innerHTML=`<input class="dr-d" value="${dt.d}" placeholder="日期" style="flex:1.5;min-width:140px"/><input class="dr-t" value="${dt.t}" placeholder="時段" style="flex:1;min-width:100px"/><input class="dr-p" value="${dt.p||''}" placeholder="場次地點（選填）" style="flex:2;min-width:160px"/><button class="del-btn" onclick="removeDateRow(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+      rows.appendChild(div);
+    });
+  }
+
+  // 顯示結果
+  const filled = [name,org,ref,deadline,place,hours].filter(Boolean).length;
+  if(filled===0 && !dates.length && !pts.length){
+    err.textContent='解析失敗，請確認格式是否正確（需含「活動名稱：」等標籤）';
+    err.style.display='inline';
+  } else {
+    ok.style.display='inline';
+    // 捲動到填寫區
+    document.getElementById('act-name').scrollIntoView({behavior:'smooth', block:'center'});
+  }
+}
+function addSchedRow(){
+  const rows = document.getElementById('sched-rows');
+  const div = document.createElement('div');
+  div.className='date-row';
+  div.innerHTML=`<input class="sc-t" placeholder="時間 例：09:00–10:30" style="flex:1"/><input class="sc-n" placeholder="課程名稱" style="flex:2.5"/><button class="del-btn" onclick="this.closest('.date-row').remove()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+  rows.appendChild(div);
+}
+function addDateRow(){
+  const rows = document.getElementById('date-rows');
+  const div = document.createElement('div');
+  div.className='date-row';
+  div.style.cssText='flex-wrap:wrap;gap:6px';
+  div.innerHTML=`<input class="dr-d" placeholder="日期 例：113/05/14（二）" style="flex:1.5;min-width:140px"/><input class="dr-t" placeholder="時段 例：09:00–12:00" style="flex:1;min-width:100px"/><input class="dr-p" placeholder="場次地點（選填）" style="flex:2;min-width:160px"/><button class="del-btn" onclick="removeDateRow(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+  rows.appendChild(div);
+}
+function removeDateRow(btn){
+  const rows = document.getElementById('date-rows');
+  if(rows.children.length>1) btn.closest('.date-row').remove();
+}
+
+async function addActivity(){
+  const name = document.getElementById('act-name').value.trim();
+  const org  = document.getElementById('act-org').value.trim();
+  if(!name||!org){ toast('請填寫活動名稱與主辦機關'); return; }
+
+  const dateRows = document.querySelectorAll('.date-row');
+  const dates = [];
+  for(const row of dateRows){
+    const d = row.querySelector('.dr-d').value.trim();
+    const t = row.querySelector('.dr-t').value.trim();
+    const p = row.querySelector('.dr-p')?.value.trim()||'';
+    if(d&&t) dates.push({d,t,p});
+  }
+  if(!dates.length){ toast('請至少填寫一個場次'); return; }
+
+  const ptsRaw = document.getElementById('act-pts').value.trim();
+  const pts = ptsRaw ? ptsRaw.split('\n').map(s=>s.trim()).filter(Boolean) : [];
+  const tagsRaw = document.getElementById('act-tags').value.trim();
+  const tags = tagsRaw ? tagsRaw.split(',').map(s=>s.trim()).filter(Boolean) : [];
+  const speUrl = document.getElementById('act-speurl').value.trim();
+  const speaker = document.getElementById('act-speaker').value.trim();
+  const speakerTitle = document.getElementById('act-speaker-title').value.trim();
+
+  const id = 'act_'+Date.now();
+  const data = {
+    id, title:name, org,
+    ref:   document.getElementById('act-ref').value.trim(),
+    deadline: document.getElementById('act-deadline').value.trim(),
+    place: document.getElementById('act-place').value.trim(),
+    hours: document.getElementById('act-hours').value.trim(),
+    pts, tags, dates, speUrl, speaker, speakerTitle
+  };
+
+  try{
+    await sbPost('acts', {id, data});
+    acts.push(data);
+    // Clear form
+    ['act-name','act-org','act-ref','act-deadline','act-place','act-hours','act-pts','act-tags','act-speurl','act-speaker','act-speaker-title'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('date-rows').innerHTML=`<div class="date-row"><input class="dr-d" placeholder="日期 例：113/05/14（二）" style="flex:1.5"/><input class="dr-t" placeholder="時段 例：09:00–12:00" style="flex:1"/><button class="del-btn" onclick="removeDateRow(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`;
+    renderAdmActs(); renderPublic(); populateDocSelects();
+    toast('✓ 活動已發布！');
+  }catch(e){ toast('發布失敗：'+e.message); }
+}
+
+function renderAdmActs(){
+  const el = document.getElementById('adm-act-list');
+  if(!acts.length){ el.innerHTML='<div style="text-align:center;padding:24px;color:var(--ink3);font-size:13px">尚無活動</div>'; return; }
+  el.innerHTML = acts.map(a => {
+    const total = a.dates.reduce((s,dt)=>s+regs.filter(r=>r.sess_key===a.id+'||'+dt.d+'||'+dt.t).length, 0);
+    const speakerRow = (a.speaker||a.speakerTitle) ?
+      `<div style="font-size:12px;color:var(--ink2);padding:7px 12px;border-radius:7px;background:var(--line2);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span style="font-weight:500">${a.speaker||''}</span>${a.speakerTitle?'<span style="color:var(--ink3);margin-left:4px"> ／ '+a.speakerTitle+'</span>':''}
+      </div>` : '';
+    const sessRows = a.dates.map(dt=>{
+      const cnt = regs.filter(r=>r.sess_key===a.id+'||'+dt.d+'||'+dt.t).length;
+      const sk = a.id+'||'+dt.d+'||'+dt.t;
+      return `<div class="sess-stat-row"><div><div class="ssr-d">${dt.d}</div><div class="ssr-t">${dt.t}</div></div><div style="display:flex;align-items:center;gap:8px"><div class="ssr-cnt">${cnt} 人</div>${cnt>0?`<button onclick="event.stopPropagation();clearSessRegs('${sk}')" title="清除此場次報名" style="background:none;border:1px solid var(--line);border-radius:5px;cursor:pointer;color:var(--ink3);padding:3px 7px;font-size:11px;font-family:'Noto Sans TC',sans-serif" onmouseover="this.style.color='var(--red)';this.style.borderColor='var(--red)'" onmouseout="this.style.color='var(--ink3)';this.style.borderColor='var(--line)'">清除報名</button>`:''}</div></div>`;
+    }).join('');
+    return `<div class="adm-act">
+      <div class="adm-act-hd" onclick="toggleAct('${a.id}')">
+        <div>
+          <div class="adm-act-title">${a.title}</div>
+          <div class="adm-act-meta">${[a.org, a.place, a.hours?'研習時數：'+a.hours:''].filter(Boolean).join('  ·  ')}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="bdg bdg-blue">${total} 人報名</span>
+          <button class="btn btn-danger" style="font-size:11px;padding:3px 9px" onclick="event.stopPropagation();deleteAct('${a.id}')">刪除</button>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="adm-act-body" id="aab_${a.id}">${speakerRow}${sessRows}
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleAct(id){ document.getElementById('aab_'+id).classList.toggle('on'); }
+async function deleteAct(id){
+  if(!confirm('確定刪除此活動？報名資料將存入參加記錄後移除。')) return;
+  try{
+    // 備份報名資料到 hist 資料表
+    const act = acts.find(a=>a.id===id)||{};
+    const actRegs = regs.filter(r=>r.act_id===id);
+    for(const r of actRegs){
+      const p = r.sess_key.split('||');
+      const res = await fetch(`${CFG.url}/rest/v1/history`,{
+        method:'POST',
+        headers:{...sbH(),'Prefer':'return=minimal'},
+        body:JSON.stringify({
+          act_id: id,
+          act_title: act.title||id,
+          act_org: act.org||'',
+          sess_date: p[1]||'',
+          sess_time: p[2]||'',
+          name: r.name,
+          reg_time: r.reg_time
+        })
+      });
+      if(!res.ok){ const err=await res.text(); throw new Error(err); }
+    }
+    await sbDel('acts','id=eq.'+id);
+    await sbDel('regs','act_id=eq.'+id);
+    acts=acts.filter(a=>a.id!==id); regs=regs.filter(r=>r.act_id!==id);
+    renderAdmActs(); renderPublic(); populateDocSelects(); toast('已刪除活動，報名記錄已存入參加記錄');
+  }catch(e){ toast('刪除失敗：'+e.message); }
+}
+async function clearAllActs(){
+  if(!confirm('確定清除所有活動與報名資料？')) return;
+  try{
+    for(const a of acts) await sbDel('acts','id=eq.'+a.id);
+    await sbDel('regs','id=gt.0');
+    acts=[]; regs=[];
+    renderAdmActs(); renderPublic(); renderRegTable(); populateDocSelects(); toast('已清除所有資料');
+  }catch(e){ toast('清除失敗'); }
+}
+
+/* ══════════════════════════════════════════
+   REGISTRATIONS
+══════════════════════════════════════════ */
+async function refreshRegs(){
+  try{
+    regs = await sbGet('regs');
+    renderAdmActs(); renderRegTable();
+  }catch(e){ toast('載入失敗'); }
+}
+function updateStats(){
+  document.getElementById('st-total').textContent = regs.length;
+  document.getElementById('st-acts').textContent  = acts.length;
+  document.getElementById('st-sess').textContent  = [...new Set(regs.map(r=>r.sess_key))].length;
+}
+function renderRegTable(){
+  updateStats();
+  const tabs = document.getElementById('reg-tabs');
+  const wrap = document.getElementById('reg-table-wrap');
+  if(!regs.length){
+    tabs.innerHTML='';
+    wrap.innerHTML='<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">尚無報名資料</div>';
+    return;
+  }
+  const keys = [...new Set(regs.map(r=>r.sess_key))];
+  tabs.innerHTML =
+    `<button class="reg-tab${activeRegTab==='__all__'?' on':''}" onclick="setRegTab('__all__')">全部 <span class="rc">${regs.length}</span></button>` +
+    keys.map(k=>{
+      const p=k.split('||'); const act=acts.find(a=>a.id===p[0])||{};
+      const cnt=regs.filter(r=>r.sess_key===k).length;
+      const short=(act.title||p[0]).slice(0,8)+(act.title&&act.title.length>8?'…':'');
+      const timeStr = p[2] ? ` ${p[2]}` : '';
+      return `<button class="reg-tab${activeRegTab===k?' on':''}" onclick="setRegTab('${k}')">${short}<br><span style="font-size:10px;opacity:.75">${p[1]}${timeStr}</span> <span class="rc">${cnt}</span></button>`;
+    }).join('');
+
+  let list = activeRegTab==='__all__' ? regs : regs.filter(r=>r.sess_key===activeRegTab);
+  if(!list.length){ wrap.innerHTML='<div style="text-align:center;padding:28px;color:var(--ink3);font-size:13px">此場次尚無報名資料</div>'; return; }
+
+  const CS=['#E8F0FB','#E6F4ED','#FDF6E7','#FCECEA','#EEEDFE'];
+  const CT=['#1a3a6a','#1d5a38','#6b4a0a','#6a1f1a','#3a3282'];
+  wrap.innerHTML = `<table class="rtable">
+    <thead><tr><th>#</th><th>姓名</th><th>活動</th><th>場次</th><th>報名時間</th><th></th></tr></thead>
+    <tbody>${list.map((r,i)=>{
+      const p=r.sess_key.split('||'); const act=acts.find(a=>a.id===p[0])||{}; const ci=i%5;
+      return `<tr>
+        <td style="color:var(--ink3);font-size:12px">${i+1}</td>
+        <td><div style="display:flex;align-items:center;gap:8px"><div class="av" style="background:${CS[ci]};color:${CT[ci]}">${r.name.slice(-2)}</div><span style="font-weight:500">${r.name}</span></div></td>
+        <td style="font-size:12px;color:var(--ink2)">${act.title||p[0]}</td>
+        <td><span style="font-size:12px;color:var(--blue)">${p[1]||''}</span><br><span style="font-size:11px;color:var(--ink3)">${p[2]||''}</span></td>
+        <td style="color:var(--ink3);font-size:12px">${r.reg_time}</td>
+        <td><button onclick="deleteReg(${r.id})" title="刪除" style="background:none;border:none;cursor:pointer;color:var(--ink3);padding:4px;border-radius:5px;line-height:0" onmouseover="this.style.color='var(--red)';this.style.background='var(--red-lt)'" onmouseout="this.style.color='var(--ink3)';this.style.background='none'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+}
+function setRegTab(k){ activeRegTab=k; renderRegTable(); }
+
+async function clearSessRegs(sessKey){
+  const cnt = regs.filter(r=>r.sess_key===sessKey).length;
+  if(!cnt){ toast('此場次沒有報名資料'); return; }
+  if(!confirm(`確定清除此場次 ${cnt} 筆報名記錄？`)) return;
+  try{
+    const ids = regs.filter(r=>r.sess_key===sessKey).map(r=>r.id);
+    for(const id of ids) await sbDel('regs','id=eq.'+id);
+    regs = regs.filter(r=>r.sess_key!==sessKey);
+    renderAdmActs(); renderRegTable();
+    toast(`✓ 已清除 ${cnt} 筆報名記錄`);
+  }catch(e){ toast('清除失敗：'+e.message); }
+}
+
+async function clearSessRegs(sessKey){
+  const cnt = regs.filter(r=>r.sess_key===sessKey).length;
+  if(!cnt){ toast('此場次沒有報名資料'); return; }
+  if(!confirm(`確定清除此場次 ${cnt} 筆報名記錄？`)) return;
+  try{
+    const ids = regs.filter(r=>r.sess_key===sessKey).map(r=>r.id);
+    for(const id of ids) await sbDel('regs','id=eq.'+id);
+    regs = regs.filter(r=>r.sess_key!==sessKey);
+    renderAdmActs(); renderRegTable();
+    toast(`✓ 已清除 ${cnt} 筆報名記錄`);
+  }catch(e){ toast('清除失敗：'+e.message); }
+}
+
+async function deleteReg(id){
+  if(!confirm('確定刪除此筆報名記錄？')) return;
+  try{
+    await sbDel('regs','id=eq.'+id);
+    regs=regs.filter(r=>r.id!==id);
+    renderRegTable(); renderAdmActs();
+    toast('已刪除報名記錄');
+  }catch(e){ toast('刪除失敗：'+e.message); }
+}
+
+/* 自動清除截止日後 7 天的活動與報名資料 */
+async function autoCleanExpired(){
+  const today = new Date();
+  const toDelete = acts.filter(a=>{
+    if(!a.deadline) return false;
+    const raw = a.deadline.trim();
+    const parts = raw.split('/');
+    if(parts.length<3) return false;
+    const year = parseInt(parts[0]) + (parseInt(parts[0]) < 1000 ? 1911 : 0);
+    const deadline = new Date(year, parseInt(parts[1])-1, parseInt(parts[2]));
+    const diffDays = (today - deadline) / (1000*60*60*24);
+    return diffDays > 7;
+  });
+  for(const a of toDelete){
+    try{
+      await sbDel('regs','act_id=eq.'+a.id);
+      await sbDel('acts','id=eq.'+a.id);
+      acts=acts.filter(x=>x.id!==a.id);
+      regs=regs.filter(r=>r.act_id!==a.id);
+    }catch(e){ console.warn('autoClean fail:',e); }
+  }
+  if(toDelete.length){ renderPublic(); console.log(`已自動清除 ${toDelete.length} 筆過期活動`); }
+}
+
+/* ══════════════════════════════════════════
+   DOC GEN
+══════════════════════════════════════════ */
+function populateDocSelects(){
+  const sel=document.getElementById('doc-act');
+  sel.innerHTML='<option value="">請選擇活動</option>'+acts.map(a=>`<option value="${a.id}">${a.title}</option>`).join('');
+  document.getElementById('doc-sess').innerHTML='<option value="">全部場次</option>';
+}
+function updateDocSess(){
+  const actId=document.getElementById('doc-act').value;
+  const act=acts.find(a=>a.id===actId);
+  const sel=document.getElementById('doc-sess');
+  sel.innerHTML='<option value="">全部場次</option>';
+  if(act) act.dates.forEach(dt=>sel.innerHTML+=`<option value="${actId}||${dt.d}||${dt.t}">${dt.d} ${dt.t}</option>`);
+}
+/* 判斷研習地區，回傳拒絕理由 */
+function getDeclineReason(act){
+  const text = (act.title||'') + (act.org||'') + (act.place||'') + JSON.stringify(act.pts||[]);
+  // 特定優先區域關鍵字
+  const regionMap = [
+    { keywords:['南澎','臺南','台南','澎湖'], region:'南澎區（臺南市、澎湖縣）' },
+    { keywords:['北北基','台北','臺北','基隆','新北'], region:'北北基區（臺北市、新北市、基隆市）' },
+    { keywords:['桃竹苗','桃園','新竹','苗栗'], region:'桃竹苗區（桃園市、新竹市、新竹縣、苗栗縣）' },
+    { keywords:['彰投','彰化','南投'], region:'彰投區（彰化縣、南投縣）' },
+    { keywords:['雲嘉南','雲林','嘉義'], region:'雲嘉南區（雲林縣、嘉義市、嘉義縣）' },
+    { keywords:['高屏','高雄','屏東'], region:'高屏區（高雄市、屏東縣）' },
+    { keywords:['花東','花蓮','臺東','台東'], region:'花東區（花蓮縣、臺東縣）' },
+    { keywords:['宜蘭'], region:'宜蘭縣' },
+  ];
+  for(const r of regionMap){
+    if(r.keywords.some(k=>text.includes(k))){
+      return `此研習為${r.region}大專校院特殊教育輔導人員優先錄取，故此次暫不派員參與。`;
+    }
+  }
+  // 台中或未明確地區
+  return '資源教室輔導人員已有參加過相關研習，故此次暫不派員參與。';
+}
+
+function genDoc(scope){
+  const actId=document.getElementById('doc-act').value;
+  if(!actId){ toast('請選擇活動'); return; }
+  const act=acts.find(a=>a.id===actId)||{};
+  const sessFilter=document.getElementById('doc-sess').value;
+  const sOrg=document.getElementById('doc-org').value.trim()||'○○機關';
+  const sP=document.getElementById('doc-person').value.trim()||'○○○';
+  const sT=document.getElementById('doc-jobtitle').value.trim()||'承辦人';
+  const sTel=document.getElementById('doc-tel').value.trim()||'04-○○○○○○○○';
+  const now=new Date();
+  const ds=`${now.getFullYear()-1911}年${now.getMonth()+1}月${now.getDate()}日`;
+
+  let doc='', outTitle='', badge='';
+
+  if(scope==='attend'){
+    // ── 有人參加 ──
+    let list=regs.filter(r=>r.act_id===actId);
+    if(sessFilter) list=list.filter(r=>r.sess_key===sessFilter);
+    if(!list.length){ toast('此條件尚無報名資料，請改用「無人參加」格式'); return; }
+
+    // 所有場次日期（去重）
+    const allDates = [...new Set(list.map(r=>r.sess_key.split('||')[1]))];
+    // 多天格式：「115/08/13（四）至115/08/14（五）」或單天
+    let dateDesc;
+    if(!sessFilter && allDates.length>1){
+      dateDesc = allDates[0] + '至' + allDates[allDates.length-1];
+    } else if(sessFilter){
+      dateDesc = sessFilter.split('||').slice(1).join(' ');
+    } else {
+      dateDesc = allDates.join('、');
+    }
+
+    // 姓名去重後以頓號串接
+    const nameList = [...new Set(list.map(r=>r.name))].join('、');
+
+    // 處理標題格式：把【編號】移到前面
+    const rawTitle = act.title||'○○研習';
+    const codeMatch = rawTitle.match(/【[^】]+】/);
+    const code = codeMatch ? codeMatch[0] : '';
+    const titleBody = rawTitle.replace(/【[^】]+】/g,'').trim();
+    const formattedTitle = code ? `${code}「${titleBody}」` : `「${titleBody}」`;
+    doc=`擬：
+1. 本文為${act.org||'○○機關'}辦理${formattedTitle}研習實施計畫。
+2. 由資源教室輔導人員${nameList}前往參加。
+3. 文呈閱後存查。`;
+    outTitle='回文公文草稿（有人參加）';
+    badge=`共 ${[...new Set(list.map(r=>r.name))].length} 名報名者`;
+
+  } else {
+    // ── 無人參加 ──
+    const reason = getDeclineReason(act);
+    const dateDesc = act.dates&&act.dates.length
+      ? act.dates.map(d=>d.d+' '+d.t).join('、')
+      : '○○年○月○日';
+
+    const rawTitle2 = act.title||'○○研習';
+    const codeMatch2 = rawTitle2.match(/【[^】]+】/);
+    const code2 = codeMatch2 ? codeMatch2[0] : '';
+    const titleBody2 = rawTitle2.replace(/【[^】]+】/g,'').trim();
+    const formattedTitle2 = code2 ? `${code2}「${titleBody2}」` : `「${titleBody2}」`;
+    doc=`擬：
+1. 本文為${act.org||'○○機關'}辦理${formattedTitle2}研習實施計畫。
+2. ${reason}
+3. 文呈閱後存查。`;
+    outTitle='回文公文草稿（無人參加）';
+    badge='未派員';
+  }
+
+  document.getElementById('doc-out-title').textContent=outTitle;
+  document.getElementById('doc-out-body').textContent=doc;
+  document.getElementById('doc-out-badge').textContent=badge;
+  document.getElementById('doc-out').style.display='block';
+  document.getElementById('doc-out').scrollIntoView({behavior:'smooth'});
+}
+function cpDoc(withMsg){
+  navigator.clipboard.writeText(document.getElementById('doc-out-body').textContent)
+    .then(()=>toast(withMsg?'已複製！請至公文系統貼上。':'公文全文已複製到剪貼簿'));
+}
+
+/* ══════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════ */
+function closeOverlay(id){ document.getElementById(id).classList.remove('on'); }
+let toastT;
+function toast(msg){ const e=document.getElementById('toast'); e.textContent=msg; e.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(()=>e.classList.remove('on'),2800); }
+
+boot();
 </script>
 </body>
 </html>
