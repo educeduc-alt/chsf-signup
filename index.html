@@ -681,6 +681,25 @@ async function submitReg(){
   const now = new Date();
   const ts = `${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   const sessKey = selActId+'||'+selDate+'||'+selTime;
+
+  // ── 名額檢查：每場限 4 人，第 5 人起跳出提醒 ──
+  const QUOTA = 4;
+  const sessRegs = regs.filter(r=>r.sess_key===sessKey);
+  if(sessRegs.length >= QUOTA){
+    const over = sessRegs.length - QUOTA + 1;
+    const confirmed = confirm(
+      `⚠️ 此場次目前已有 ${sessRegs.length} 人報名（已達 ${QUOTA} 人上限）。
+
+` +
+      `您將成為第 ${sessRegs.length + 1} 位，請注意：
+需要商量一位同仁留守辦公室。
+
+` +
+      `確定要繼續報名嗎？`
+    );
+    if(!confirmed) return;
+  }
+
   const reg = { act_id:selActId, sess_key:sessKey, name, reg_time:ts };
   const saveBtn = document.querySelector('#reg-form-view .btn-full');
   if(saveBtn) saveBtn.disabled = true;
