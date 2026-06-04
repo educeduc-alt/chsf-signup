@@ -686,16 +686,17 @@ async function submitReg(){
   const QUOTA = 4;
   const sessRegs = regs.filter(r=>r.sess_key===sessKey);
   if(sessRegs.length >= QUOTA){
-    const over = sessRegs.length - QUOTA + 1;
+    const nth = sessRegs.length + 1;
     const confirmed = confirm(
-      `⚠️ 此場次目前已有 ${sessRegs.length} 人報名（已達 ${QUOTA} 人上限）。
+      `嗯？你是第 ${nth} 個要報名的喔。
 
 ` +
-      `您將成為第 ${sessRegs.length + 1} 位，請注意：
-需要商量一位同仁留守辦公室。
+      `你們辦公室已經有 ${sessRegs.length} 個人要去了，
+` +
+      `要商量好是誰留守，不然我就會非常不開心 😡
 
 ` +
-      `確定要繼續報名嗎？`
+      `商量好了嗎？確定要繼續報名？`
     );
     if(!confirmed) return;
   }
