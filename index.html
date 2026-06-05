@@ -66,7 +66,13 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
 .apc-tag{font-size:11px;font-weight:500;padding:2px 9px;border-radius:99px;background:rgba(74,127,165,.1);color:#4a7fa5;border:1px solid rgba(74,127,165,.15)}
 .apc-body{padding:20px 24px;background:#fff}
 .apc-sess-label{font-size:12px;font-weight:500;color:#3a5a70;margin-bottom:10px}
-.sess-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:8px}
+.sess-grid-wrap{position:relative;display:flex;align-items:center;gap:6px}
+.sess-grid{display:flex;gap:8px;overflow:hidden;scroll-behavior:smooth;flex:1}
+.sess-grid .sess-btn{flex:0 0 calc(33.333% - 6px);min-width:160px}
+.sess-nav-btn{background:#fff;border:1px solid var(--line);border-radius:99px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink2);transition:all .14s;flex-shrink:0;padding:0}
+.sess-nav-btn:hover{background:var(--blue-lt);border-color:var(--blue);color:var(--blue)}
+.sess-nav-btn:disabled{opacity:.25;cursor:default;pointer-events:none}
+@media(max-width:600px){.sess-grid .sess-btn{flex:0 0 calc(50% - 4px)}}
 .sess-btn{padding:12px 14px;border:1.5px solid #dce8f0;border-radius:9px;background:#fff;cursor:pointer;text-align:left;font-family:'Noto Sans TC',sans-serif;transition:all .16s;position:relative}
 .sess-btn:hover{border-color:#a8c8e0;background:#f0f7fb;transform:translateY(-1px);box-shadow:0 2px 8px rgba(74,127,165,.1)}
 .sess-btn .sd{font-size:13px;font-weight:600;color:#111;margin-bottom:2px}
@@ -664,7 +670,15 @@ function renderPublic(){
       </div>
       <div class="apc-body">
         <div class="apc-sess-label">請選擇欲參加的場次</div>
-        <div class="sess-grid">${sessHtml}</div>
+        <div class="sess-grid-wrap" id="sgw-${a.id}">
+          <button class="sess-nav-btn" id="snl-${a.id}" onclick="sessScroll('${a.id}',-1)" disabled>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div class="sess-grid" id="sg-${a.id}" onscroll="updateSessNav('${a.id}')">${sessHtml}</div>
+          <button class="sess-nav-btn" id="snr-${a.id}" onclick="sessScroll('${a.id}',1)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
       </div>
     </div>`;
     }).join('');
@@ -696,6 +710,7 @@ function renderPublic(){
   }).join('');
 
   list.innerHTML = groupHtml;
+  requestAnimationFrame(initSessNavs);
 }
 
 /* ══════════════════════════════════════════
@@ -724,6 +739,32 @@ function carGo(uid, idx){
 function carStep(uid, dir){
   const cur = _carState[uid]||0;
   carGo(uid, cur+dir);
+}
+
+/* ══════════════════════════════════════════
+   SESS CAROUSEL
+══════════════════════════════════════════ */
+function sessScroll(actId, dir){
+  const grid = document.getElementById('sg-'+actId);
+  if(!grid) return;
+  const btnW = grid.querySelector('.sess-btn')?.offsetWidth || 180;
+  grid.scrollLeft += dir * (btnW + 8) * 2;
+  setTimeout(()=>updateSessNav(actId), 350);
+}
+function updateSessNav(actId){
+  const grid = document.getElementById('sg-'+actId);
+  if(!grid) return;
+  const l = document.getElementById('snl-'+actId);
+  const r = document.getElementById('snr-'+actId);
+  if(l) l.disabled = grid.scrollLeft <= 2;
+  if(r) r.disabled = grid.scrollLeft + grid.clientWidth >= grid.scrollWidth - 2;
+}
+// 初始化所有場次 nav 狀態
+function initSessNavs(){
+  document.querySelectorAll('[id^="sg-"]').forEach(grid=>{
+    const actId = grid.id.replace('sg-','');
+    updateSessNav(actId);
+  });
 }
 
 /* ══════════════════════════════════════════
