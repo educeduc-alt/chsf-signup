@@ -49,13 +49,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
 .org-carousel-track-wrap{overflow:hidden;border-radius:14px}
 .org-carousel-track{display:flex;transition:transform .35s cubic-bezier(.4,0,.2,1)}
 .org-carousel-track .act-pub-card{flex:0 0 100%;width:100%;border-radius:14px}
-.org-carousel-nav{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px}
-.org-carousel-btn{background:#fff;border:1px solid var(--line);border-radius:99px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink2);transition:all .14s;flex-shrink:0}
-.org-carousel-btn:hover{background:var(--blue-lt);border-color:var(--blue);color:var(--blue)}
-.org-carousel-btn:disabled{opacity:.3;cursor:default;pointer-events:none}
-.org-carousel-dots{display:flex;gap:6px;align-items:center}
-.org-carousel-dot{width:7px;height:7px;border-radius:99px;background:var(--line);transition:all .2s;cursor:pointer}
-.org-carousel-dot.on{background:var(--blue);width:18px}
+
 .apc-top{background:linear-gradient(135deg,#2c4a6e,#3a6090);padding:22px 24px;border-bottom:1px solid #dce8f0}
 .apc-title{font-family:'Noto Serif TC',serif;font-size:17px;font-weight:600;color:#fff;margin-bottom:6px}
 .apc-meta{font-size:12px;color:rgba(255,255,255,.8);line-height:1.7}
@@ -683,63 +677,14 @@ function renderPublic(){
     </div>`;
     }).join('');
 
-    // 單一活動直接顯示，多活動做 carousel
-    if(orgActs.length <= 1){
-      return `<div style="width:100%">${cardsHtml}</div>`;
-    }
-
-    const uid = 'car-' + Math.random().toString(36).slice(2,7);
-    const dots = orgActs.map((_,i)=>`<div class="org-carousel-dot${i===0?' on':''}" onclick="carGo('${uid}',${i})"></div>`).join('');
-    return `<div style="width:100%">
-      <div class="org-carousel" id="${uid}">
-        <div class="org-carousel-track-wrap">
-          <div class="org-carousel-track" id="${uid}-track">${cardsHtml.replace(/style="width:100%"/g,'')}</div>
-        </div>
-        <div class="org-carousel-nav">
-          <button class="org-carousel-btn" id="${uid}-prev" onclick="carStep('${uid}',-1)" disabled>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-          </button>
-          <div class="org-carousel-dots" id="${uid}-dots">${dots}</div>
-          <button class="org-carousel-btn" id="${uid}-next" onclick="carStep('${uid}',1)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
-        <div style="text-align:center;font-size:11px;color:var(--ink3);margin-top:6px" id="${uid}-counter">1 / ${orgActs.length}</div>
-      </div>
-    </div>`;
+    return `<div style="width:100%">${cardsHtml}</div>`;
   }).join('');
 
   list.innerHTML = groupHtml;
   requestAnimationFrame(initSessNavs);
 }
 
-/* ══════════════════════════════════════════
-   CAROUSEL
-══════════════════════════════════════════ */
-const _carState = {};
-function carGo(uid, idx){
-  const track = document.getElementById(uid+'-track');
-  if(!track) return;
-  const total = track.children.length;
-  idx = Math.max(0, Math.min(idx, total-1));
-  _carState[uid] = idx;
-  track.style.transform = `translateX(-${idx*100}%)`;
-  // dots
-  const dots = document.querySelectorAll(`#${uid}-dots .org-carousel-dot`);
-  dots.forEach((d,i)=>d.classList.toggle('on',i===idx));
-  // buttons
-  const prev = document.getElementById(uid+'-prev');
-  const next = document.getElementById(uid+'-next');
-  if(prev) prev.disabled = idx===0;
-  if(next) next.disabled = idx===total-1;
-  // counter
-  const counter = document.getElementById(uid+'-counter');
-  if(counter) counter.textContent = `${idx+1} / ${total}`;
-}
-function carStep(uid, dir){
-  const cur = _carState[uid]||0;
-  carGo(uid, cur+dir);
-}
+
 
 /* ══════════════════════════════════════════
    SESS CAROUSEL
