@@ -592,15 +592,9 @@ function renderPublic(){
   if(!acts.length){ empty.style.display='block'; list.style.display='none'; return; }
   empty.style.display='none'; list.style.display='flex';
 
-  // ── 依主辦機關分組 ──
-  const orgMap = new Map();
-  acts.forEach(a => {
-    const key = a.org || '其他';
-    if(!orgMap.has(key)) orgMap.set(key, []);
-    orgMap.get(key).push(a);
-  });
-
-  const groupHtml = [...orgMap.entries()].map(([org, orgActs]) => {
+  // ── 直接依 created_at.desc 順序顯示（後台最後新增的在最上面）──
+  const groupHtml = acts.map(a => {
+    const orgActs = [a]; // 每筆活動獨立渲染，不分組
     const cardsHtml = orgActs.map(a => {
     const ptsHtml = a.pts&&a.pts.length ? `<div class="apc-pts">${a.pts.map(p=>{
       // 日程標題行（【研習日程】）
@@ -677,7 +671,7 @@ function renderPublic(){
     </div>`;
     }).join('');
 
-    return `<div style="width:100%">${cardsHtml}</div>`;
+    return cardsHtml;
   }).join('');
 
   list.innerHTML = groupHtml;
