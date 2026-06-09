@@ -570,7 +570,7 @@ async function boot(){
 
 async function loadData(){
   try{
-    const aRows = await sbGet('acts');
+    const aRows = await sbGet('acts','order=created_at.desc');
     acts = aRows.map(r => r.data);
     regs = await sbGet('regs');
   }catch(e){ console.warn('loadData:', e); }
