@@ -1431,6 +1431,13 @@ function getDeclineReason(act){
   return '資源教室輔導人員已有參加過相關研習，故此次暫不派員參與。';
 }
 
+// 公文中的辦理單位：有標示承辦單位時，只顯示承辦單位名稱。
+function getOrganizerDisplay(org){
+  const orgRaw = (org||'○○機關').trim();
+  const subMatch = orgRaw.match(/承\s*辦\s*單\s*位\s*[：:]\s*([^）)（(\r\n]+)/);
+  return subMatch ? subMatch[1].trim() : orgRaw;
+}
+
 function genDoc(scope){
   const actId=document.getElementById('doc-act').value;
   if(!actId){ toast('請選擇活動'); return; }
@@ -1472,8 +1479,9 @@ function genDoc(scope){
     const code = codeMatch ? codeMatch[0] : '';
     const titleBody = rawTitle.replace(/【[^】]+】/g,'').trim();
     const formattedTitle = code ? `${code}「${titleBody}」` : `「${titleBody}」`;
+    const orgDisplay = getOrganizerDisplay(act.org);
     doc=`擬：
-1. 本文為${act.org||'○○機關'}辦理${formattedTitle}研習實施計畫。
+1. 本文為${orgDisplay}辦理${formattedTitle}研習實施計畫。
 2. 由資源教室輔導人員${nameList}前往參加。
 3. 文呈閱後存查。`;
     outTitle='回文公文草稿（有人參加）';
@@ -1491,8 +1499,9 @@ function genDoc(scope){
     const code2 = codeMatch2 ? codeMatch2[0] : '';
     const titleBody2 = rawTitle2.replace(/【[^】]+】/g,'').trim();
     const formattedTitle2 = code2 ? `${code2}「${titleBody2}」` : `「${titleBody2}」`;
+    const orgDisplay2 = getOrganizerDisplay(act.org);
     doc=`擬：
-1. 本文為${act.org||'○○機關'}辦理${formattedTitle2}研習實施計畫。
+1. 本文為${orgDisplay2}辦理${formattedTitle2}研習實施計畫。
 2. ${reason}
 3. 文呈閱後存查。`;
     outTitle='回文公文草稿（無人參加）';
