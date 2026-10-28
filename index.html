@@ -601,11 +601,12 @@ function saveSetup(){
 function renderPublic(){
   const empty = document.getElementById('pub-empty');
   const list  = document.getElementById('pub-act-list');
-  if(!acts.length){ empty.style.display='block'; list.style.display='none'; return; }
+  const publicActs = acts.filter(a=>Array.isArray(a.dates)&&a.dates.length>0);
+  if(!publicActs.length){ empty.style.display='block'; list.style.display='none'; return; }
   empty.style.display='none'; list.style.display='flex';
 
   // ── 直接依 created_at.desc 順序顯示（後台最後新增的在最上面）──
-  const groupHtml = acts.map(a => {
+  const groupHtml = publicActs.map(a => {
     const orgActs = [a]; // 每筆活動獨立渲染，不分組
     const cardsHtml = orgActs.map(a => {
     const ptsHtml = a.pts&&a.pts.length ? `<div class="apc-pts">${a.pts.map(p=>{
@@ -1521,12 +1522,47 @@ async function saveGeneratedDoc(act,scope,sessFilter,doc,badge){
       body:JSON.stringify({data:act})
     });
     if(!res.ok) throw new Error(await res.text());
+
+    // 寫入後重新讀取一次，確認公文確實已保存於雲端後台。
+    const verifyRes=await fetch(`${CFG.url}/rest/v1/acts?select=data&id=eq.${encodeURIComponent(act.id)}&limit=1`,{headers:sbH()});
+    if(!verifyRes.ok) throw new Error(await verifyRes.text());
+    const verifyRows=await verifyRes.json();
+    const savedData=verifyRows[0]&&verifyRows[0].data;
+    const confirmed=Array.isArray(savedData&&savedData.doc_history)&&savedData.doc_history.some(item=>item.id===record.id);
+    if(!confirmed) throw new Error('雲端資料中找不到剛產生的公文紀錄');
+    act.doc_history=savedData.doc_history;
     renderSavedDocs(act);
-    return true;
+    return record;
   }catch(e){
     act.doc_history=previous;
     console.warn('公文保存失敗:',e);
     return false;
+  }
+}
+
+async function hidePublicSessions(act,sessFilter){
+  const previousDates=Array.isArray(act.dates)?[...act.dates]:[];
+  const remainingDates=sessFilter
+    ? previousDates.filter(dt=>`${act.id}||${dt.d}||${dt.t}`!==sessFilter)
+    : [];
+  const hiddenCount=previousDates.length-remainingDates.length;
+  if(!hiddenCount) return 0;
+  act.dates=remainingDates;
+  try{
+    const res=await fetch(`${CFG.url}/rest/v1/acts?id=eq.${encodeURIComponent(act.id)}`,{
+      method:'PATCH',
+      headers:{...sbH(),'Prefer':'return=minimal'},
+      body:JSON.stringify({data:act})
+    });
+    if(!res.ok) throw new Error(await res.text());
+    renderPublic();
+    renderAdmActs();
+    updateDocSess();
+    return hiddenCount;
+  }catch(e){
+    act.dates=previousDates;
+    console.warn('前台場次隱藏失敗:',e);
+    return -1;
   }
 }
 
@@ -1606,7 +1642,18 @@ async function genDoc(scope){
   document.getElementById('doc-out').style.display='block';
   document.getElementById('doc-out').scrollIntoView({behavior:'smooth'});
   const saved=await saveGeneratedDoc(act,scope,sessFilter,doc,badge);
-  toast(saved?'✓ 公文已產生並自動保存至後台':'公文已產生，但自動保存失敗，請稍後再試');
+  if(!saved){
+    toast('公文已產生，但尚未確認保存成功；前台場次已保留');
+    return;
+  }
+  const hiddenCount=await hidePublicSessions(act,sessFilter);
+  if(hiddenCount<0){
+    toast('✓ 已確認公文保存成功，但前台場次隱藏失敗');
+  }else if(hiddenCount===0){
+    toast('✓ 已確認公文保存成功；前台已無此場次');
+  }else{
+    toast(`✓ 已確認公文保存成功，前台已隱藏 ${hiddenCount} 個場次`);
+  }
 }
 function cpDoc(withMsg){
   navigator.clipboard.writeText(document.getElementById('doc-out-body').textContent)
