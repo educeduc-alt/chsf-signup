@@ -508,6 +508,18 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)
             <button class="btn btn-p" onclick="cpDoc(true)">複製 → 貼入公文系統</button>
           </div>
         </div>
+
+        <div style="margin-top:24px;border-top:1px solid var(--line);padding-top:18px">
+          <div class="acard-hd" style="margin-bottom:10px">
+            <div>
+              <div class="acard-title">已保存的回文公文</div>
+              <div style="font-size:12px;color:var(--ink3);margin-top:2px">按下產生公文後，系統會自動保存於所選活動</div>
+            </div>
+          </div>
+          <div id="saved-docs-wrap" style="display:flex;flex-direction:column;gap:10px">
+            <div style="text-align:center;padding:18px;color:var(--ink3);font-size:13px">請先選擇活動</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1407,6 +1419,7 @@ function updateDocSess(){
   const sel=document.getElementById('doc-sess');
   sel.innerHTML='<option value="">全部場次</option>';
   if(act) act.dates.forEach(dt=>sel.innerHTML+=`<option value="${actId}||${dt.d}||${dt.t}">${dt.d} ${dt.t}</option>`);
+  renderSavedDocs(act);
 }
 /* 判斷研習地區，回傳拒絕理由 */
 function getDeclineReason(act){
@@ -1431,14 +1444,93 @@ function getDeclineReason(act){
   return '資源教室輔導人員已有參加過相關研習，故此次暫不派員參與。';
 }
 
-// 公文中的辦理單位：有標示承辦單位時，只顯示承辦單位名稱。
+// 公文中的辦理單位：優先顯示承辦單位，其次顯示主辦單位。
 function getOrganizerDisplay(org){
   const orgRaw = (org||'○○機關').trim();
-  const subMatch = orgRaw.match(/承\s*辦\s*單\s*位\s*[：:]\s*([^）)（(\r\n]+)/);
-  return subMatch ? subMatch[1].trim() : orgRaw;
+  const patterns = [
+    /承\s*辦\s*單\s*位\s*(?:[：:]|為)\s*([^，,；;）)（(\r\n]+)/,
+    /主\s*辦\s*單\s*位\s*(?:[：:]|為)\s*([^，,；;）)（(\r\n]+)/
+  ];
+  for(const pattern of patterns){
+    const match = orgRaw.match(pattern);
+    if(match) return match[1].trim();
+  }
+  return orgRaw;
 }
 
-function genDoc(scope){
+function renderSavedDocs(act){
+  const wrap=document.getElementById('saved-docs-wrap');
+  if(!wrap) return;
+  wrap.innerHTML='';
+  if(!act){
+    wrap.innerHTML='<div style="text-align:center;padding:18px;color:var(--ink3);font-size:13px">請先選擇活動</div>';
+    return;
+  }
+  const docs=Array.isArray(act.doc_history)?act.doc_history:[];
+  if(!docs.length){
+    wrap.innerHTML='<div style="text-align:center;padding:18px;color:var(--ink3);font-size:13px">此活動尚無已保存公文</div>';
+    return;
+  }
+  docs.forEach(item=>{
+    const card=document.createElement('div');
+    card.style.cssText='border:1px solid var(--line);border-radius:9px;background:var(--white);overflow:hidden';
+
+    const head=document.createElement('div');
+    head.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 13px;background:var(--line2)';
+    const info=document.createElement('div');
+    const title=document.createElement('div');
+    title.style.cssText='font-size:13px;font-weight:500;color:var(--ink)';
+    title.textContent=item.type==='attend'?'有人參加 — 報名公文':'無人參加 — 致謝不派員公文';
+    const meta=document.createElement('div');
+    meta.style.cssText='font-size:11px;color:var(--ink3);margin-top:2px';
+    const savedAt=item.created_at?new Date(item.created_at).toLocaleString('zh-TW',{hour12:false}):'';
+    meta.textContent=[savedAt,item.session_label].filter(Boolean).join('　');
+    info.append(title,meta);
+    const copyBtn=document.createElement('button');
+    copyBtn.className='btn btn-g';
+    copyBtn.style.cssText='font-size:11px;padding:4px 10px;flex-shrink:0';
+    copyBtn.textContent='複製全文';
+    copyBtn.onclick=()=>navigator.clipboard.writeText(item.content||'').then(()=>toast('公文全文已複製到剪貼簿'));
+    head.append(info,copyBtn);
+
+    const body=document.createElement('div');
+    body.style.cssText='padding:12px 14px;font-size:12px;line-height:1.8;white-space:pre-wrap;font-family:\'Noto Serif TC\',serif;color:var(--ink2);max-height:150px;overflow:auto';
+    body.textContent=item.content||'';
+    card.append(head,body);
+    wrap.appendChild(card);
+  });
+}
+
+async function saveGeneratedDoc(act,scope,sessFilter,doc,badge){
+  const previous=Array.isArray(act.doc_history)?[...act.doc_history]:[];
+  const sessionLabel=sessFilter?sessFilter.split('||').slice(1).join(' '):'全部場次';
+  const record={
+    id:`doc-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+    type:scope,
+    created_at:new Date().toISOString(),
+    session_key:sessFilter||'',
+    session_label:sessionLabel,
+    badge,
+    content:doc
+  };
+  act.doc_history=[record,...previous];
+  try{
+    const res=await fetch(`${CFG.url}/rest/v1/acts?id=eq.${encodeURIComponent(act.id)}`,{
+      method:'PATCH',
+      headers:{...sbH(),'Prefer':'return=minimal'},
+      body:JSON.stringify({data:act})
+    });
+    if(!res.ok) throw new Error(await res.text());
+    renderSavedDocs(act);
+    return true;
+  }catch(e){
+    act.doc_history=previous;
+    console.warn('公文保存失敗:',e);
+    return false;
+  }
+}
+
+async function genDoc(scope){
   const actId=document.getElementById('doc-act').value;
   if(!actId){ toast('請選擇活動'); return; }
   const act=acts.find(a=>a.id===actId)||{};
@@ -1513,6 +1605,8 @@ function genDoc(scope){
   document.getElementById('doc-out-badge').textContent=badge;
   document.getElementById('doc-out').style.display='block';
   document.getElementById('doc-out').scrollIntoView({behavior:'smooth'});
+  const saved=await saveGeneratedDoc(act,scope,sessFilter,doc,badge);
+  toast(saved?'✓ 公文已產生並自動保存至後台':'公文已產生，但自動保存失敗，請稍後再試');
 }
 function cpDoc(withMsg){
   navigator.clipboard.writeText(document.getElementById('doc-out-body').textContent)
